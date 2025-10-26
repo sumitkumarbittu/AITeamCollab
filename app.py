@@ -518,10 +518,17 @@ def get_activity_logs():
 def send_message():
     try:
         data = request.json
-        if not data or 'name' not in data or 'message' not in data:
-            return jsonify({'error': 'Missing name or message'}), 400
+        if not data or 'message' not in data:
+            return jsonify({'error': 'Missing message'}), 400
         
-        new_message = Chat(name=data['name'], message=data['message'])
+        # Use "Unknown" if name is empty or not provided
+        name = data.get('name', '').strip() or 'Unknown'
+        message = data['message'].strip()
+        
+        if not message:
+            return jsonify({'error': 'Message cannot be empty'}), 400
+        
+        new_message = Chat(name=name, message=message)
         db.session.add(new_message)
         db.session.commit()
         return jsonify({"status": "success", "message": new_message.to_dict()})
@@ -535,6 +542,20 @@ def get_messages():
         messages = Chat.query.order_by(Chat.time.desc()).all()
         return jsonify({"status": "success", "messages": [m.to_dict() for m in messages]})
     except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/chat/delete/<int:message_id>', methods=['DELETE'])
+def delete_message(message_id):
+    try:
+        message = Chat.query.get(message_id)
+        if not message:
+            return jsonify({"error": "Message not found"}), 404
+        
+        db.session.delete(message)
+        db.session.commit()
+        return jsonify({"status": "success", "message": "Message deleted"})
+    except Exception as e:
+        db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
 

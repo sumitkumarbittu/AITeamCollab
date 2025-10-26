@@ -87,7 +87,13 @@ async function loadProjects() {
         <div class="item-header">
           <span class="item-title">${proj.name}</span>
           <div class="item-actions">
-            <button class="btn btn-sm btn-secondary" onclick="deleteProject(${proj.id})">Delete</button>
+            <button class="btn btn-sm btn-primary" onclick="editProject(${proj.id}, '${proj.name.replace(/'/g, "\\'")}', '${proj.start_date || ''}', '${proj.end_date || ''}', '${(proj.description || '').replace(/'/g, "\\'")}')">
+              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display: inline; vertical-align: middle; margin-right: 4px;">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+              </svg>
+              Edit
+            </button>
+            <button class="btn btn-sm btn-danger" onclick="deleteProject(${proj.id})">Delete</button>
           </div>
         </div>
         <div class="item-meta">Start: ${proj.start_date || '—'} | End: ${proj.end_date || '—'}</div>
@@ -119,20 +125,74 @@ async function loadTasks() {
     const projectMap = {};
     projects.forEach(p => projectMap[p.id] = p.name);
 
+    // Create task map for relationships
+    const taskMap = {};
+    data.forEach(t => taskMap[t.id] = t.title);
+
     data.forEach(task => {
-      const priorityClass = task.priority <= 2 ? 'badge-high' : task.priority >= 4 ? 'badge-low' : 'badge-normal';
+      // Detailed priority classification with new colors
+      let priorityClass, priorityText;
+      if (task.priority === 1) {
+        priorityClass = 'priority-badge priority-1';
+        priorityText = '🔴 Urgent';
+      } else if (task.priority === 2) {
+        priorityClass = 'priority-badge priority-2';
+        priorityText = '🟠 High';
+      } else if (task.priority === 3) {
+        priorityClass = 'priority-badge priority-3';
+        priorityText = '🟡 Medium';
+      } else if (task.priority === 4) {
+        priorityClass = 'priority-badge priority-4';
+        priorityText = '🔵 Low';
+      } else {
+        priorityClass = 'priority-badge priority-5';
+        priorityText = '⚪ Minimal';
+      }
+      
+      // Build relationships display
+      let relationshipsHTML = '';
+      if (task.parent_task_id) {
+        const parentName = taskMap[task.parent_task_id] || 'Unknown Task';
+        relationshipsHTML += `
+          <div class="task-relationship-badge parent">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+            </svg>
+            <span><strong>Subtask of:</strong> ${parentName}</span>
+          </div>
+        `;
+      }
+      if (task.depends_on_task_id) {
+        const dependsName = taskMap[task.depends_on_task_id] || 'Unknown Task';
+        relationshipsHTML += `
+          <div class="task-relationship-badge dependency">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+            </svg>
+            <span><strong>Depends on:</strong> ${dependsName}</span>
+          </div>
+        `;
+      }
+      
       const div = document.createElement('div');
       div.className = 'item';
       div.innerHTML = `
         <div class="item-header">
           <span class="item-title">${task.title}</span>
           <div class="item-actions">
+            <button class="btn btn-sm btn-primary" onclick="editTask(${task.id})">
+              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display: inline; vertical-align: middle; margin-right: 4px;">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+              </svg>
+              Edit
+            </button>
             <button class="btn btn-sm btn-danger" onclick="deleteTask(${task.id})">Delete</button>
           </div>
         </div>
         <div class="item-meta">Project: ${projectMap[task.project_id] || '—'} | Due: ${task.due_date || '—'}</div>
         <div class="item-description">Assigned to: ${task.assigned_to || 'Unassigned'}</div>
-        <span class="badge ${priorityClass}">Priority ${task.priority}</span>
+        <span class="${priorityClass}">${priorityText}</span>
+        ${relationshipsHTML}
       `;
       list.appendChild(div);
     });
@@ -141,9 +201,39 @@ async function loadTasks() {
   }
 }
 
+// Priority slider functionality
+const prioritySlider = document.getElementById('task-priority');
+const priorityDisplay = document.getElementById('priority-display');
+
+function updatePriorityDisplay(value) {
+  const priorityNames = {
+    1: '🔴 Urgent',
+    2: '🟠 High',
+    3: '🟡 Medium',
+    4: '🔵 Low',
+    5: '⚪ Minimal'
+  };
+  
+  if (priorityDisplay) {
+    priorityDisplay.innerHTML = `<span class="priority-badge priority-${value}">${priorityNames[value]}</span>`;
+  }
+}
+
+if (prioritySlider) {
+  prioritySlider.addEventListener('input', (e) => {
+    updatePriorityDisplay(e.target.value);
+  });
+  
+  // Initialize display
+  updatePriorityDisplay(prioritySlider.value);
+}
+
 // Form handlers
 document.getElementById('create-project-form').addEventListener('submit', async (e) => {
   e.preventDefault();
+  const form = e.target;
+  const editId = form.dataset.editId;
+  
   const payload = {
     name: document.getElementById('project-name').value,
     start_date: document.getElementById('project-start').value || null,
@@ -152,58 +242,102 @@ document.getElementById('create-project-form').addEventListener('submit', async 
   };
 
   try {
-    const res = await fetch('/api/projects', {
-      method: 'POST',
+    const url = editId ? `/api/projects/${editId}` : '/api/projects';
+    const method = editId ? 'PUT' : 'POST';
+    
+    const res = await fetch(url, {
+      method: method,
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(payload)
     });
 
     if (res.ok) {
       e.target.reset();
+      delete form.dataset.editId;
+      
+      // Reset form title and button
+      const formTitle = document.querySelector('#projects-view .card-title');
+      const formButton = form.querySelector('button[type="submit"]');
+      if (formTitle) formTitle.textContent = 'Create New Project';
+      if (formButton) {
+        formButton.innerHTML = `
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+          Create Project
+        `;
+      }
+      
       loadProjects();
       // Refresh activity widget immediately (if available)
       if (typeof window !== 'undefined' && window.refreshActivityWidget) {
         window.refreshActivityWidget();
       }
     } else {
-      alert('Failed to create project');
+      alert(editId ? 'Failed to update project' : 'Failed to create project');
     }
   } catch (error) {
-    console.error('Error creating project:', error);
-    alert('Failed to create project');
+    console.error('Error saving project:', error);
+    alert('Failed to save project');
   }
 });
 
 document.getElementById('create-task-form').addEventListener('submit', async (e) => {
   e.preventDefault();
+  const form = e.target;
+  const editId = form.dataset.editId;
+  
+  const parentTaskId = document.getElementById('task-parent-select').value;
+  const dependsOnTaskId = document.getElementById('task-depends-select').value;
+  
   const payload = {
     project_id: parseInt(document.getElementById('task-project-select').value),
     title: document.getElementById('task-title').value,
     assigned_to: document.getElementById('task-assigned').value || null,
     due_date: document.getElementById('task-due').value || null,
-    priority: parseInt(document.getElementById('task-priority').value)
+    priority: parseInt(document.getElementById('task-priority').value),
+    parent_task_id: parentTaskId ? parseInt(parentTaskId) : null,
+    depends_on_task_id: dependsOnTaskId ? parseInt(dependsOnTaskId) : null
   };
 
   try {
-    const res = await fetch('/api/tasks', {
-      method: 'POST',
+    const url = editId ? `/api/tasks/${editId}` : '/api/tasks';
+    const method = editId ? 'PUT' : 'POST';
+    
+    const res = await fetch(url, {
+      method: method,
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(payload)
     });
 
     if (res.ok) {
       e.target.reset();
+      delete form.dataset.editId;
+      
+      // Reset form title and button
+      const formTitle = document.querySelector('#tasks-view .card-title');
+      const formButton = form.querySelector('button[type="submit"]');
+      if (formTitle) formTitle.textContent = 'Create New Task';
+      if (formButton) {
+        formButton.innerHTML = `
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+          Create Task
+        `;
+      }
+      
       loadTasks();
       // Refresh activity widget immediately (if available)
       if (typeof window !== 'undefined' && window.refreshActivityWidget) {
         window.refreshActivityWidget();
       }
     } else {
-      alert('Failed to create task');
+      alert(editId ? 'Failed to update task' : 'Failed to create task');
     }
   } catch (error) {
-    console.error('Error creating task:', error);
-    alert('Failed to create task');
+    console.error('Error saving task:', error);
+    alert('Failed to save task');
   }
 });
 
@@ -221,6 +355,26 @@ async function loadTasksForSelect() {
       taskSelect.innerHTML = `<option value="">Select Project *</option>`;
       projects.forEach(p => {
         taskSelect.innerHTML += `<option value="${p.id}">${p.name}</option>`;
+      });
+    }
+
+    // Update parent task dropdown
+    const parentSelect = document.getElementById('task-parent-select');
+    if (parentSelect) {
+      parentSelect.innerHTML = `<option value="">None (Independent Task)</option>`;
+      tasks.forEach(t => {
+        const statusBadge = t.status === 'done' ? '✅' : t.status === 'in_progress' ? '🔄' : '📝';
+        parentSelect.innerHTML += `<option value="${t.id}">${statusBadge} ${t.title}</option>`;
+      });
+    }
+
+    // Update depends on task dropdown
+    const dependsSelect = document.getElementById('task-depends-select');
+    if (dependsSelect) {
+      dependsSelect.innerHTML = `<option value="">No Dependencies</option>`;
+      tasks.forEach(t => {
+        const statusBadge = t.status === 'done' ? '✅' : t.status === 'in_progress' ? '🔄' : '📝';
+        dependsSelect.innerHTML += `<option value="${t.id}">${statusBadge} ${t.title}</option>`;
       });
     }
 
@@ -373,15 +527,128 @@ const activityToggleBtn = document.getElementById('toggle-activity');
 const activityBody = document.getElementById('activity-body');
 const activityContent = document.getElementById('activity-content');
 
+// Get minimized buttons
+const activityMinimizedBtn = document.getElementById('activity-minimized-btn');
+const chatMinimizedBtn = document.getElementById('chat-minimized-btn');
+
+// Activity widget auto-minimize timers
+let activityIdleTimer = null;
+let activityInitialTimer = null;
+
+function minimizeActivityWidget() {
+  if (activityWidget && activityMinimizedBtn && !activityWidget.classList.contains('minimized')) {
+    activityWidget.classList.add('minimized');
+    activityMinimizedBtn.style.display = 'flex';
+    console.log('📦 Activity widget auto-minimized');
+  }
+}
+
+function resetActivityIdleTimer() {
+  clearTimeout(activityIdleTimer);
+  activityIdleTimer = setTimeout(() => {
+    minimizeActivityWidget();
+  }, 20000); // 20 seconds idle
+}
+
+function startActivityInitialTimer() {
+  activityInitialTimer = setTimeout(() => {
+    minimizeActivityWidget();
+  }, 5000); // 5 seconds on load
+}
+
 // Toggle minimize/expand for activity widget
-if (activityToggleBtn) {
+if (activityToggleBtn && activityMinimizedBtn) {
   activityToggleBtn.addEventListener('click', () => {
-    activityWidget.classList.toggle('minimized');
-    activityToggleBtn.textContent = activityWidget.classList.contains('minimized') ? '▢' : '_';
+    clearTimeout(activityIdleTimer);
+    clearTimeout(activityInitialTimer);
+    activityWidget.classList.add('minimized');
+    activityMinimizedBtn.style.display = 'flex';
+  });
+  
+  // Click minimized button to restore
+  activityMinimizedBtn.addEventListener('click', () => {
+    activityWidget.classList.remove('minimized');
+    activityMinimizedBtn.style.display = 'none';
+    resetActivityIdleTimer();
+  });
+  
+  // Reset idle timer on any interaction with widget
+  if (activityWidget) {
+    ['click', 'mousemove', 'mouseenter', 'scroll'].forEach(event => {
+      activityWidget.addEventListener(event, resetActivityIdleTimer);
+    });
+    
+    // Start initial 5-second timer when page loads
+    startActivityInitialTimer();
+  }
+}
+
+// Refresh button for activity widget
+const refreshActivityBtn = document.getElementById('refresh-activity');
+if (refreshActivityBtn) {
+  refreshActivityBtn.addEventListener('click', (e) => {
+    e.stopPropagation(); // Prevent triggering drag
+    refreshActivityBtn.style.transform = 'rotate(360deg)';
+    loadActivityWidget();
+    setTimeout(() => {
+      refreshActivityBtn.style.transform = 'rotate(0deg)';
+    }, 500);
   });
 }
 
 // Load activity logs dynamically
+// Helper function to get relative time
+function getRelativeTime(timestamp) {
+  const now = new Date();
+  const time = new Date(timestamp);
+  const diffInSeconds = Math.floor((now - time) / 1000);
+  
+  if (diffInSeconds < 60) return 'just now';
+  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
+  return time.toLocaleDateString();
+}
+
+// Helper function to get action icon and color
+function getActionDetails(actionType) {
+  const actions = {
+    'created': {
+      icon: `<svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"/>
+      </svg>`,
+      class: 'created',
+      text: 'Created'
+    },
+    'updated': {
+      icon: `<svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
+        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
+      </svg>`,
+      class: 'updated',
+      text: 'Updated'
+    },
+    'deleted': {
+      icon: `<svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/>
+      </svg>`,
+      class: 'deleted',
+      text: 'Deleted'
+    }
+  };
+  return actions[actionType.toLowerCase()] || actions['updated'];
+}
+
+// Helper function to format object type
+function formatObjectType(objectType) {
+  const types = {
+    'project': { emoji: '📁', name: 'Project' },
+    'task': { emoji: '✓', name: 'Task' },
+    'attachment': { emoji: '📎', name: 'Attachment' },
+    'chat': { emoji: '💬', name: 'Chat' }
+  };
+  return types[objectType.toLowerCase()] || { emoji: '📄', name: objectType };
+}
+
 async function loadActivityWidget() {
   console.log('🔍 WIDGET: Loading activity logs...');
   try {
@@ -393,28 +660,75 @@ async function loadActivityWidget() {
       activityContent.innerHTML = '';
 
       if (data.length === 0) {
-        activityContent.innerHTML = '<p>No activity yet.</p>';
-        console.log('📊 WIDGET: No activities to display');
+        activityContent.innerHTML = `
+          <div class="activity-loading">
+            <p style="color: #999;">No activity yet</p>
+            <small style="color: #ccc;">Activity will appear here as you work</small>
+          </div>
+        `;
+        // Update footer count
+        const countEl = document.querySelector('.activity-count');
+        if (countEl) countEl.textContent = '0 activities';
         return;
       }
 
-      console.log('📋 WIDGET: Displaying activities:', data.map(a => `${a.action_type} on ${a.object_type}`));
-      data.slice(-10).reverse().forEach(log => {
+      // Get recent activities (last 15)
+      const recentActivities = data.slice(-15).reverse();
+      
+      console.log('📋 WIDGET: Displaying activities:', recentActivities.map(a => `${a.action_type} on ${a.object_type}`));
+      
+      recentActivities.forEach(log => {
+        const actionDetails = getActionDetails(log.action_type);
+        const objectDetails = formatObjectType(log.object_type);
+        const relativeTime = getRelativeTime(log.timestamp);
+        
         const div = document.createElement('div');
-        div.className = 'activity-item';
+        div.className = `activity-item ${actionDetails.class}`;
         div.innerHTML = `
-          <strong>${log.action_type}</strong> on ${log.object_type} #${log.object_id}
-          <span>${log.timestamp}</span>
+          <div class="activity-item-header">
+            <div class="activity-icon ${actionDetails.class}">
+              ${actionDetails.icon}
+            </div>
+            <div class="activity-details">
+              <div class="activity-action">
+                ${actionDetails.text}
+              </div>
+              <div class="activity-object">
+                <span class="activity-object-type">${objectDetails.emoji} ${objectDetails.name}</span>
+                <span>#${log.object_id}</span>
+              </div>
+            </div>
+            <div class="activity-timestamp">${relativeTime}</div>
+          </div>
         `;
         activityContent.appendChild(div);
       });
+
+      // Update footer count
+      const countEl = document.querySelector('.activity-count');
+      if (countEl) {
+        countEl.textContent = `${data.length} ${data.length === 1 ? 'activity' : 'activities'}`;
+      }
+
+      // Update minimized button badge
+      if (activityMinimizedBtn) {
+        const badge = activityMinimizedBtn.querySelector('.notification-badge');
+        if (badge) {
+          badge.textContent = data.length > 99 ? '99+' : data.length;
+        }
+      }
 
       console.log('✅ WIDGET: Activity widget updated successfully');
     }
   } catch (error) {
     console.error('❌ WIDGET ERROR:', error);
     if (activityContent) {
-      activityContent.innerHTML = '<p>Error loading activities.</p>';
+      activityContent.innerHTML = `
+        <div class="activity-loading">
+          <p style="color: #ef4444;">⚠️ Error loading activities</p>
+          <small style="color: #999;">${error.message}</small>
+        </div>
+      `;
     }
   }
 }
@@ -445,6 +759,7 @@ if (activityWidget && activityHeader) {
     activityOffsetX = e.clientX - activityWidget.getBoundingClientRect().left;
     activityOffsetY = e.clientY - activityWidget.getBoundingClientRect().top;
     activityWidget.style.transition = 'none';
+    resetActivityIdleTimer(); // Reset timer when dragging
   });
 
   document.addEventListener('mousemove', (e) => {
@@ -476,12 +791,82 @@ const nameInput = document.getElementById('name-input');
 const messageInput = document.getElementById('message-input');
 const resizeHandle = document.getElementById('resize-handle');
 
+// Chat widget auto-minimize timers
+let chatIdleTimer = null;
+let chatInitialTimer = null;
+
+function minimizeChatWidget() {
+  if (chatWidget && chatMinimizedBtn && !chatWidget.classList.contains('minimized')) {
+    chatWidget.classList.add('minimized');
+    chatMinimizedBtn.style.display = 'flex';
+    console.log('📦 Chat widget auto-minimized');
+  }
+}
+
+function resetChatIdleTimer() {
+  clearTimeout(chatIdleTimer);
+  chatIdleTimer = setTimeout(() => {
+    minimizeChatWidget();
+  }, 20000); // 20 seconds idle
+}
+
+function startChatInitialTimer() {
+  chatInitialTimer = setTimeout(() => {
+    minimizeChatWidget();
+  }, 5000); // 5 seconds on load
+}
+
 // Chat widget functionality
-if (chatToggleBtn && chatWidget) {
+if (chatToggleBtn && chatWidget && chatMinimizedBtn) {
   chatToggleBtn.addEventListener('click', () => {
-    chatWidget.classList.toggle('minimized');
-    chatToggleBtn.textContent = chatWidget.classList.contains('minimized') ? '▢' : '_';
+    clearTimeout(chatIdleTimer);
+    clearTimeout(chatInitialTimer);
+    chatWidget.classList.add('minimized');
+    chatMinimizedBtn.style.display = 'flex';
   });
+  
+  // Click minimized button to restore
+  chatMinimizedBtn.addEventListener('click', () => {
+    chatWidget.classList.remove('minimized');
+    chatMinimizedBtn.style.display = 'none';
+    resetChatIdleTimer();
+  });
+  
+  // Reset idle timer on any interaction with widget
+  if (chatWidget) {
+    ['click', 'mousemove', 'mouseenter', 'scroll', 'keypress'].forEach(event => {
+      chatWidget.addEventListener(event, resetChatIdleTimer);
+    });
+    
+    // Start initial 5-second timer when page loads
+    startChatInitialTimer();
+  }
+}
+
+// Clear chat functionality
+const clearChatBtn = document.getElementById('clear-chat');
+if (clearChatBtn && chatBox) {
+  clearChatBtn.addEventListener('click', () => {
+    if (confirm('Are you sure you want to clear all chat messages?')) {
+      chatBox.innerHTML = `
+        <div class="chat-welcome">
+          <div class="welcome-icon">💬</div>
+          <h3>Welcome to Team Chat</h3>
+          <p>Start a conversation with your team</p>
+        </div>
+      `;
+    }
+  });
+}
+
+// Helper function to get user initials
+function getUserInitials(name) {
+  return name
+    .split(' ')
+    .map(word => word[0])
+    .join('')
+    .toUpperCase()
+    .substring(0, 2);
 }
 
 // ========== Drag Chat Widget to Move ==========
@@ -492,6 +877,7 @@ if (chatHeader && chatWidget) {
     chatOffsetX = e.clientX - chatWidget.getBoundingClientRect().left;
     chatOffsetY = e.clientY - chatWidget.getBoundingClientRect().top;
     chatWidget.style.transition = 'none';
+    resetChatIdleTimer(); // Reset timer when dragging
   });
 }
 
@@ -538,23 +924,79 @@ document.addEventListener('mousemove', (e) => {
 document.addEventListener('mouseup', () => isResizing = false);
 
 // ========== Chat Message Functions ==========
+// Make deleteMessage globally accessible
+window.deleteMessage = async function(messageId) {
+  if (!confirm('Delete this message?')) return;
+  
+  try {
+    const res = await fetch(`/chat/delete/${messageId}`, {
+      method: 'DELETE'
+    });
+    const data = await res.json();
+    if (data.status === 'success') {
+      await fetchMessages();
+    } else {
+      alert('Failed to delete message');
+    }
+  } catch (err) {
+    console.error('Delete error:', err);
+    alert('Failed to delete message');
+  }
+}
+
 async function fetchMessages() {
   try {
     const res = await fetch('/chat/get');
     const data = await res.json();
     if (chatBox && data.status === 'success') {
-      chatBox.innerHTML = '';
       const msgs = data.messages.reverse();
       if (msgs.length === 0) {
-        chatBox.innerHTML = '<div class="message">No messages yet...</div>';
+        chatBox.innerHTML = `
+          <div class="chat-welcome">
+            <div class="welcome-icon">💬</div>
+            <h3>Welcome to Team Chat</h3>
+            <p>Start a conversation with your team</p>
+          </div>
+        `;
       } else {
+        chatBox.innerHTML = '';
         msgs.forEach(m => {
+          const initials = getUserInitials(m.name);
           const div = document.createElement('div');
           div.className = 'message';
-          div.innerHTML = `<strong>${m.name}</strong>: ${m.message} <span class="time">${m.time}</span>`;
+          div.innerHTML = `
+            <div class="message-avatar">${initials}</div>
+            <div class="message-content">
+              <div class="message-header">
+                <strong>${m.name}</strong>
+                <span class="time">${m.time}</span>
+              </div>
+              <div class="message-text">${m.message}</div>
+            </div>
+            <button class="message-delete" onclick="deleteMessage(${m.id})" title="Delete message">
+              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          `;
           chatBox.appendChild(div);
         });
         if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
+      }
+      
+      // Update online count
+      const onlineCount = document.querySelector('.chat-online-count');
+      if (onlineCount) {
+        const uniqueUsers = new Set(msgs.map(m => m.name)).size;
+        onlineCount.textContent = `● ${uniqueUsers > 0 ? uniqueUsers : 1} online`;
+      }
+      
+      // Update minimized button badge
+      if (chatMinimizedBtn) {
+        const badge = chatMinimizedBtn.querySelector('.notification-badge');
+        if (badge) {
+          badge.textContent = msgs.length > 99 ? '99+' : msgs.length;
+        }
       }
     }
   } catch (err) {
@@ -565,9 +1007,9 @@ async function fetchMessages() {
 if (messageForm && nameInput && messageInput) {
   messageForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const name = nameInput.value.trim();
+    const name = nameInput.value.trim() || 'Unknown'; // Use "Unknown" if empty
     const message = messageInput.value.trim();
-    if (!name || !message) return;
+    if (!message) return; // Only check if message is empty
 
     try {
       await fetch('/chat/send', {
@@ -639,6 +1081,18 @@ async function loadGraph() {
       cy = cytoscape({
         container: container,
         elements: elements,
+        
+        // Renderer settings for better quality
+        renderer: {
+          name: 'canvas',
+          hideEdgesOnViewport: false,
+          hideLabelsOnViewport: false,
+          textureOnViewport: false,
+          motionBlur: false,
+          motionBlurOpacity: 0.2,
+          wheelSensitivity: 0.1
+        },
+        
         style: [
           {
             selector: 'node[type="project"]',
@@ -653,7 +1107,8 @@ async function loadGraph() {
               'height': 60,
               'font-size': 12,
               'border-width': 2,
-              'border-color': '#2980b9'
+              'border-color': '#2980b9',
+              'z-index': 10
             }
           },
           {
@@ -679,21 +1134,24 @@ async function loadGraph() {
               'height': 50,
               'font-size': 11,
               'border-width': 2,
-              'border-color': '#2c3e50'
+              'border-color': '#2c3e50',
+              'z-index': 10
             }
           },
           {
             selector: 'edge',
             style: {
-              'width': 3,
+              'width': 4,
               'line-color': '#3498db',
               'target-arrow-shape': 'triangle',
               'target-arrow-color': '#3498db',
               'source-arrow-shape': 'none',
               'curve-style': 'bezier',
-              'arrow-scale': 1.5,
-              'opacity': 1,
-              'z-index': 10
+              'arrow-scale': 1.8,
+              'opacity': 0.95,
+              'z-index': 999,
+              'overlay-opacity': 0,
+              'line-cap': 'round'
             }
           },
           {
@@ -701,17 +1159,21 @@ async function loadGraph() {
             style: {
               'line-color': '#28a745',
               'target-arrow-color': '#28a745',
-              'width': 3
+              'width': 4,
+              'opacity': 0.95,
+              'z-index': 999
             }
           },
           {
             selector: 'edge[type="subtask"]',
             style: {
               'line-style': 'dashed',
-              'line-dash-pattern': [8, 4],
+              'line-dash-pattern': [10, 5],
               'line-color': '#6f42c1',
               'target-arrow-color': '#6f42c1',
-              'width': 2
+              'width': 3,
+              'opacity': 0.95,
+              'z-index': 999
             }
           },
           {
@@ -719,9 +1181,11 @@ async function loadGraph() {
             style: {
               'line-color': '#dc3545',
               'target-arrow-color': '#dc3545',
-              'width': 3,
+              'width': 4,
               'target-arrow-shape': 'triangle',
-              'source-arrow-shape': 'circle'
+              'source-arrow-shape': 'circle',
+              'opacity': 0.95,
+              'z-index': 999
             }
           },
           {
@@ -729,7 +1193,25 @@ async function loadGraph() {
             style: {
               'line-color': '#f39c12',
               'target-arrow-color': '#f39c12',
-              'width': 4
+              'width': 5,
+              'opacity': 1,
+              'z-index': 1000
+            }
+          },
+          {
+            selector: 'node:selected',
+            style: {
+              'border-width': 4,
+              'border-color': '#f39c12',
+              'overlay-opacity': 0.2,
+              'overlay-color': '#f39c12'
+            }
+          },
+          {
+            selector: 'node:active',
+            style: {
+              'overlay-opacity': 0.3,
+              'overlay-color': '#3498db'
             }
           }
         ],
@@ -749,6 +1231,118 @@ async function loadGraph() {
       console.log('✅ GRAPH: Cytoscape instance created successfully');
       console.log('📊 GRAPH: Nodes in instance:', cy.nodes().length);
       console.log('📊 GRAPH: Edges in instance:', cy.edges().length);
+      
+      // Multiple passes to force edge visibility
+      const forceEdgeVisibility = () => {
+        if (cy && cy.edges()) {
+          cy.edges().forEach(edge => {
+            edge.style({
+              'opacity': 0.95,
+              'z-index': 999,
+              'display': 'element'
+            });
+          });
+        }
+      };
+      
+      // Force edges at multiple intervals
+      setTimeout(() => {
+        forceEdgeVisibility();
+        cy.fit(50);
+        console.log('🔄 GRAPH: Pass 1 - Edge visibility enforced');
+      }, 100);
+      
+      setTimeout(() => {
+        forceEdgeVisibility();
+        cy.forceRender();
+        console.log('🔄 GRAPH: Pass 2 - Forced render');
+      }, 300);
+      
+      setTimeout(() => {
+        forceEdgeVisibility();
+        console.log('🔄 GRAPH: Pass 3 - Final edge check');
+      }, 600);
+      
+      // Keep edges visible on any graph event
+      cy.on('render', function() {
+        cy.edges().forEach(edge => {
+          if (edge.style('opacity') < 0.9) {
+            edge.style('opacity', 0.95);
+          }
+        });
+      });
+      
+      // Add interactive hover effects
+      cy.on('mouseover', 'node', function(evt) {
+        const node = evt.target;
+        node.style({
+          'border-width': 4,
+          'border-color': '#f39c12',
+          'cursor': 'pointer'
+        });
+      });
+      
+      cy.on('mouseout', 'node', function(evt) {
+        const node = evt.target;
+        const nodeType = node.data('type');
+        node.style({
+          'border-width': 2,
+          'border-color': nodeType === 'project' ? '#2980b9' : '#2c3e50'
+        });
+      });
+      
+      // Add click handlers for editing
+      cy.on('tap', 'node[type="project"]', function(evt) {
+        const node = evt.target;
+        const projectId = node.data('id').replace('project-', '');
+        const projectName = node.data('label');
+        
+        // Fetch full project details and edit
+        fetch(`/api/projects/${projectId}`)
+          .then(res => res.json())
+          .then(project => {
+            showView('projects');
+            setTimeout(() => {
+              editProject(
+                project.id,
+                project.name || '',
+                project.start_date || '',
+                project.end_date || '',
+                project.description || ''
+              );
+            }, 300);
+          })
+          .catch(err => {
+            console.error('Error fetching project:', err);
+            alert('Failed to load project details');
+          });
+      });
+      
+      cy.on('tap', 'node[type="task"]', function(evt) {
+        const node = evt.target;
+        const taskId = node.data('id').replace('task-', '');
+        
+        showView('tasks');
+        setTimeout(() => {
+          editTask(parseInt(taskId));
+        }, 300);
+      });
+      
+      // Add tooltip on hover
+      cy.on('mouseover', 'node', function(evt) {
+        const node = evt.target;
+        const type = node.data('type');
+        const status = node.data('status');
+        
+        let tooltipText = `${type === 'project' ? '📁 Project' : '✓ Task'}: ${node.data('label')}`;
+        if (status) {
+          tooltipText += `\nStatus: ${status}`;
+        }
+        tooltipText += '\n\nClick to edit';
+        
+        node.data('tooltip', tooltipText);
+      });
+      
     } else {
       // Update existing instance
       cy.json({ elements: elements });
@@ -759,8 +1353,39 @@ async function loadGraph() {
         spacingFactor: 1.5,
         avoidOverlap: true,
         maximal: true,
-        animate: true
+        animate: true,
+        animationDuration: 500
       }).run();
+      
+      // Force edges to stay visible after update - multiple passes
+      const forceEdgeVisibility = () => {
+        if (cy && cy.edges()) {
+          cy.edges().forEach(edge => {
+            edge.style({
+              'opacity': 0.95,
+              'z-index': 999,
+              'display': 'element'
+            });
+          });
+        }
+      };
+      
+      setTimeout(() => {
+        forceEdgeVisibility();
+        console.log('🔄 UPDATE: Pass 1 - Edge visibility enforced');
+      }, 200);
+      
+      setTimeout(() => {
+        forceEdgeVisibility();
+        cy.forceRender();
+        console.log('🔄 UPDATE: Pass 2 - Forced render');
+      }, 600);
+      
+      setTimeout(() => {
+        forceEdgeVisibility();
+        console.log('🔄 UPDATE: Pass 3 - Final edge check');
+      }, 1000);
+      
       console.log('✅ GRAPH: Graph updated with new data');
     }
 
@@ -918,7 +1543,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (typeof loadProjects === 'function') loadProjects();
       } else if (view === 'tasks') {
         if (typeof loadTasksForSelect === 'function') loadTasksForSelect();
-        if (typeof loadTasks === 'function') loadTasks();
+        // loadTasks() is already called by showView, no need to call it again
       } else if (view === 'attachments') {
         if (typeof loadTasksForSelect === 'function') loadTasksForSelect();
         if (typeof loadAttachments === 'function') loadAttachments();
@@ -1228,3 +1853,75 @@ function formatAISuggestions(text) {
   return formatted;
 }
 
+// ========== Edit Project Function ==========
+window.editProject = async function(projectId, name, startDate, endDate, description) {
+  // Scroll to form
+  document.getElementById('projects-view').scrollIntoView({ behavior: 'smooth' });
+  
+  // Populate form fields
+  document.getElementById('project-name').value = name || '';
+  document.getElementById('project-start').value = startDate || '';
+  document.getElementById('project-end').value = endDate || '';
+  document.getElementById('project-desc').value = description || '';
+  
+  // Change form title and button
+  const formTitle = document.querySelector('#projects-view .card-title');
+  const formButton = document.querySelector('#create-project-form button[type="submit"]');
+  
+  if (formTitle) formTitle.textContent = '✏️ Edit Project';
+  if (formButton) {
+    formButton.innerHTML = `
+      <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+      </svg>
+      Update Project
+    `;
+  }
+  
+  // Store project ID for update
+  document.getElementById('create-project-form').dataset.editId = projectId;
+}
+
+// ========== Edit Task Function ==========
+window.editTask = async function(taskId) {
+  try {
+    // Fetch task details
+    const res = await fetch(`/api/tasks/${taskId}`);
+    const task = await res.json();
+    
+    // Scroll to form
+    document.getElementById('tasks-view').scrollIntoView({ behavior: 'smooth' });
+    
+    // Populate form fields
+    document.getElementById('task-project-select').value = task.project_id || '';
+    document.getElementById('task-title').value = task.title || '';
+    document.getElementById('task-assigned').value = task.assigned_to || '';
+    document.getElementById('task-due').value = task.due_date || '';
+    document.getElementById('task-priority').value = task.priority || 3;
+    document.getElementById('task-parent-select').value = task.parent_task_id || '';
+    document.getElementById('task-depends-select').value = task.depends_on_task_id || '';
+    
+    // Update priority slider display
+    updatePriorityDisplay(task.priority || 3);
+    
+    // Change form title and button
+    const formTitle = document.querySelector('#tasks-view .card-title');
+    const formButton = document.querySelector('#create-task-form button[type="submit"]');
+    
+    if (formTitle) formTitle.textContent = '✏️ Edit Task';
+    if (formButton) {
+      formButton.innerHTML = `
+        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+        </svg>
+        Update Task
+      `;
+    }
+    
+    // Store task ID for update
+    document.getElementById('create-task-form').dataset.editId = taskId;
+  } catch (error) {
+    console.error('Error fetching task:', error);
+    alert('Failed to load task details');
+  }
+}

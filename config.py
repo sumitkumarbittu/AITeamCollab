@@ -67,6 +67,7 @@ class Chat(db.Model):
 
     def to_dict(self):
         return {
+            'id': self.id,
             'name': self.name,
             'message': self.message,
             'time': self.time.strftime('%Y-%m-%d %H:%M:%S')

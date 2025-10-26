@@ -236,13 +236,57 @@
             <input type="text" class="form-input" id="task-title" placeholder="Task title *" required />
             <input type="text" class="form-input" id="task-assigned" placeholder="Assigned to" />
             <input type="date" class="form-input" id="task-due" placeholder="Due date" />
-            <select class="form-select" id="task-priority">
-              <option value="1">Priority 1 — High</option>
-              <option value="2">Priority 2</option>
-              <option value="3" selected>Priority 3 — Normal</option>
-              <option value="4">Priority 4</option>
-              <option value="5">Priority 5 — Low</option>
-            </select>
+            <div class="priority-slider-container">
+              <label class="priority-label">
+                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"/>
+                </svg>
+                <span>Task Priority</span>
+              </label>
+              <div class="priority-display" id="priority-display">
+                <span class="priority-badge priority-3">🟡 Medium</span>
+              </div>
+              <input type="range" class="priority-slider" id="task-priority" min="1" max="5" value="3" step="1">
+              <div class="priority-labels">
+                <span class="priority-high">Urgent</span>
+                <span class="priority-normal">Medium</span>
+                <span class="priority-low">Minimal</span>
+              </div>
+            </div>
+            
+            <!-- Relationship Fields -->
+            <div class="relationship-container">
+              <div class="relationship-box">
+                <label class="relationship-label">
+                  <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                  </svg>
+                  <span>Parent Task (Subtask of)</span>
+                </label>
+                <select class="form-select relationship-select" id="task-parent-select">
+                  <option value="">None (Independent Task)</option>
+                </select>
+                <small class="relationship-help">
+                  💡 Make this task a subtask of another parent task
+                </small>
+              </div>
+              
+              <div class="relationship-box">
+                <label class="relationship-label">
+                  <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+                  </svg>
+                  <span>Depends On Task</span>
+                </label>
+                <select class="form-select relationship-select" id="task-depends-select">
+                  <option value="">No Dependencies</option>
+                </select>
+                <small class="relationship-help">
+                  💡 Block this task until the selected task is completed
+                </small>
+              </div>
+            </div>
+            
             <button type="submit" class="btn btn-primary">
               <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
@@ -328,30 +372,106 @@
     </div>
   </div>
 
+  <!-- Minimized Activity Button -->
+  <button id="activity-minimized-btn" class="minimized-widget-btn left" style="display: none;">
+    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+    </svg>
+    <span class="notification-badge">0</span>
+  </button>
+
   <!-- Floating Activity Log Widget -->
   <div id="activity-widget" class="draggable">
     <div id="activity-header">
-      <span>Activity Log</span>
-      <button id="toggle-activity">_</button>
+      <div class="activity-title">
+        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <span>Activity Feed</span>
+      </div>
+      <div class="activity-controls">
+        <button id="refresh-activity" title="Refresh">
+          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+        </button>
+        <button id="toggle-activity" title="Minimize">−</button>
+      </div>
     </div>
     <div id="activity-body">
-      <div id="activity-content">Loading...</div>
+      <div id="activity-content">
+        <div class="activity-loading">
+          <div class="loading-spinner"></div>
+          <p>Loading activities...</p>
+        </div>
+      </div>
+    </div>
+    <div id="activity-footer">
+      <span class="activity-count">0 activities</span>
+      <span class="activity-live">● Live</span>
     </div>
   </div>
+
+  <!-- Minimized Chat Button -->
+  <button id="chat-minimized-btn" class="minimized-widget-btn right" style="display: none;">
+    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+    </svg>
+    <span class="notification-badge">0</span>
+  </button>
 
   <!-- Floating Chat Widget -->
   <div id="chat-widget" class="draggable resizable">
     <div id="chat-header">
-      <span>💬 Team Chat</span>
-      <button id="toggle-chat">_</button>
+      <div class="chat-title">
+        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+        </svg>
+        <span>Team Chat</span>
+        <span class="chat-online-count">● 1 online</span>
+      </div>
+      <div class="chat-controls">
+        <button id="clear-chat" title="Clear chat">
+          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+          </svg>
+        </button>
+        <button id="toggle-chat" title="Minimize">−</button>
+      </div>
     </div>
 
     <div id="chat-body">
-      <div id="chat-box" class="chat-box"></div>
+      <div id="chat-box" class="chat-box">
+        <div class="chat-welcome">
+          <div class="welcome-icon">💬</div>
+          <h3>Welcome to Team Chat</h3>
+          <p>Start a conversation with your team</p>
+        </div>
+      </div>
+      
+      <div class="chat-typing-indicator" id="typing-indicator" style="display: none;">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+      
       <form id="message-form" class="message-form">
-        <input type="text" id="name-input" placeholder="Your name" required>
-        <input type="text" id="message-input" placeholder="Type a message..." required>
-        <button type="submit">Send</button>
+        <div class="user-avatar-input">
+          <div class="user-avatar">
+            <svg width="18" height="18" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+            </svg>
+          </div>
+          <input type="text" id="name-input" placeholder="Your name (optional)" autocomplete="name">
+        </div>
+        <div class="message-input-container">
+          <input type="text" id="message-input" placeholder="Type a message..." required autocomplete="off">
+          <button type="submit" class="send-button">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+            </svg>
+          </button>
+        </div>
       </form>
     </div>
 
