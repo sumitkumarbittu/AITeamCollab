@@ -894,7 +894,8 @@ document.addEventListener('DOMContentLoaded', () => {
           graph: 'Visual project and task relationships',
           projects: 'Manage your projects and track progress',
           tasks: 'Create and manage tasks for your projects',
-          attachments: 'Upload and manage project files'
+          attachments: 'Upload and manage project files',
+          github: 'GitHub repository integration and statistics'
         };
         subtitleElement.textContent = subtitles[view] || '';
       }
@@ -922,6 +923,8 @@ document.addEventListener('DOMContentLoaded', () => {
       } else if (view === 'attachments') {
         if (typeof loadTasksForSelect === 'function') loadTasksForSelect();
         if (typeof loadAttachments === 'function') loadAttachments();
+      } else if (view === 'github') {
+        loadGitHubView();
       }
     });
   });
@@ -931,6 +934,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (typeof loadTasksForSelect === 'function') loadTasksForSelect();
 
   console.log('✅ PS16 Workspace fully initialized');
+  loadGitHubView();
 });
 
 
