@@ -12,6 +12,9 @@ from werkzeug.utils import secure_filename
 from config import get_db_connection, db, log_activity, ActivityLog, Chat
 import psycopg2
 import psycopg2.extras
+from dotenv import load_dotenv
+
+load_dotenv()
 import logging
 
 
@@ -852,6 +855,145 @@ Format your response as clear bullet points."""
             }), 500
 
 
+
+# --------- GitHub Integration ----------
+@app.route('/api/github/<owner>/<repo>', methods=['GET'])
+def github_info(owner, repo):
+    import requests
+    base_url = f'https://api.github.com/repos/{owner}/{repo}'
+    commits = requests.get(f'{base_url}/commits').json()
+    issues = requests.get(f'{base_url}/issues').json()
+    branches = requests.get(f'{base_url}/branches').json()
+    return jsonify({'commits': commits, 'issues': issues, 'branches': branches})
+
+@app.route('/api/github/sync-issues', methods=['POST'])
+def sync_github_issues():
+    import requests
+    data = request.json
+    owner, repo = data['repo'].split('/')[-2:]
+    
+    github_token = os.getenv('GITHUB_TOKEN')
+    headers = {'Authorization': f'token {github_token}'} if github_token else {}
+    
+    response = requests.get(f'https://api.github.com/repos/{owner}/{repo}/issues', headers=headers)
+    issues = response.json()
+    
+    if not isinstance(issues, list):
+        print(f"Issues error: {issues}")
+        return jsonify({'tasks': [], 'error': issues.get('message', 'Unknown error')})
+    
+    tasks = []
+    for issue in issues:
+        task = {
+            'title': issue.get('title', ''),
+            'description': issue.get('body', ''),
+            'status': 'open' if issue.get('state') == 'open' else 'closed',
+            'url': issue.get('html_url', ''),
+            'github_id': issue.get('number', 0)
+        }
+        tasks.append(task)
+    
+    print(f"Returning {len(tasks)} tasks")
+    return jsonify({'tasks': tasks})
+
+@app.route('/api/github/sync-prs', methods=['POST'])
+def sync_github_prs():
+    import requests
+    data = request.json
+    owner, repo = data['repo'].split('/')[-2:]
+    
+    github_token = os.getenv('GITHUB_TOKEN')
+    headers = {'Authorization': f'token {github_token}'} if github_token else {}
+    
+    response = requests.get(f'https://api.github.com/repos/{owner}/{repo}/pulls', headers=headers)
+    prs = response.json()
+    
+    if not isinstance(prs, list):
+        return jsonify({'milestones': [], 'error': prs.get('message', 'Unknown error')})
+    
+    milestones = []
+    for pr in prs:
+        milestone = {
+            'title': pr.get('title', ''),
+            'description': pr.get('body', ''),
+            'author': pr.get('user', {}).get('login', ''),
+            'status': pr.get('state', ''),
+            'branch': pr.get('head', {}).get('ref', ''),
+            'url': pr.get('html_url', '')
+        }
+        milestones.append(milestone)
+    
+    print(f"Returning {len(milestones)} PRs")
+    return jsonify({'milestones': milestones})
+
+@app.route('/api/github/stats/<owner>/<repo>', methods=['GET'])
+def github_stats(owner, repo):
+    import requests
+    base_url = f'https://api.github.com/repos/{owner}/{repo}'
+    github_token = os.getenv('GITHUB_TOKEN')
+    headers = {'Authorization': f'token {github_token}'} if github_token else {}
+    
+    repo_info = requests.get(base_url, headers=headers).json()
+    commits_resp = requests.get(f'{base_url}/commits', headers=headers).json()
+    issues_resp = requests.get(f'{base_url}/issues', headers=headers).json()
+    prs_resp = requests.get(f'{base_url}/pulls', headers=headers).json()
+    
+    commits = commits_resp if isinstance(commits_resp, list) else []
+    issues = issues_resp if isinstance(issues_resp, list) else []
+    prs = prs_resp if isinstance(prs_resp, list) else []
+    
+    stats = {
+        'repository': repo_info.get('html_url', ''),
+        'stars': repo_info.get('stargazers_count', 0),
+        'forks': repo_info.get('forks_count', 0),
+        'commits_count': len(commits),
+        'open_issues': len([i for i in issues if i.get('state') == 'open']),
+        'closed_issues': len([i for i in issues if i.get('state') == 'closed']),
+        'open_prs': len([p for p in prs if p.get('state') == 'open']),
+        'recent_commits': commits[:5]
+    }
+    return jsonify(stats)
+
+@app.route('/api/github/poll-webhook', methods=['GET'])
+def poll_webhook():
+    import requests
+    import json
+    from datetime import datetime
+    
+    response = requests.get('https://webhook.site/token/a11550b0-d02a-4898-8735-3429a419aa00/requests')
+    events = response.json()
+    
+    webhook_events = []
+    for event in events.get('data', []):
+        content = json.loads(event.get('content', '{}'))
+        
+        if 'repository' in content:
+            commits = content.get('commits', [])
+            changes_info = []
+            
+            for commit in commits:
+                added = len(commit.get('added', []))
+                removed = len(commit.get('removed', []))
+                modified = len(commit.get('modified', []))
+                changes_info.append({
+                    'message': commit.get('message'),
+                    'added': f'+{added}',
+                    'removed': f'-{removed}',
+                    'modified': f'~{modified}'
+                })
+            
+            log_data = {
+                'timestamp': datetime.now().isoformat(),
+                'event': event.get('headers', {}).get('x-github-event', ['unknown'])[0],
+                'repository': content['repository']['html_url'],
+                'user': content.get('sender', {}).get('login'),
+                'action': content.get('action'),
+                'changes': changes_info if changes_info else None
+            }
+            
+            webhook_events.append(log_data)
+    
+    return jsonify({'events': webhook_events})
 
 # --------- Run ----------
 if __name__ == '__main__':
