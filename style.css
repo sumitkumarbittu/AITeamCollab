@@ -674,44 +674,48 @@
 /* ========== Priority Slider ========== */
 .priority-slider-container {
   grid-column: 1 / -1;
-  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 12px;
   background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
-  border-radius: 10px;
+  border-radius: 8px;
   border: 1px solid #e0e0e0;
-  margin: 6px 0;
+  margin: 4px 0;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .priority-label {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   font-weight: 600;
   color: #424242;
-  margin-bottom: 6px;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+  margin: 0;
 }
 
 .priority-label svg {
-  width: 14px;
-  height: 14px;
+  width: 13px;
+  height: 13px;
   opacity: 0.8;
 }
 
 .priority-display {
-  text-align: center;
-  margin-bottom: 8px;
+  flex-shrink: 0;
+  margin: 0;
 }
 
 .priority-badge {
   display: inline-block;
-  padding: 3px 12px;
-  border-radius: 14px;
+  padding: 2px 10px;
+  border-radius: 12px;
   font-weight: 600;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   transition: all 0.2s ease;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
-  letter-spacing: 0.3px;
+  letter-spacing: 0.2px;
 }
 
 .priority-badge.priority-1 {
@@ -742,8 +746,8 @@
 .priority-slider {
   -webkit-appearance: none;
   appearance: none;
-  width: 100%;
-  height: 5px;
+  width: 180px;
+  height: 4px;
   border-radius: 10px;
   background: linear-gradient(to right, 
     #e53e3e 0%,
@@ -753,8 +757,9 @@
     #9ca3af 100%);
   outline: none;
   transition: all 0.2s;
-  margin: 6px 0;
+  margin: 0;
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
 }
 
 .priority-slider:hover {
@@ -764,8 +769,8 @@
 .priority-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
   background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
   cursor: grab;
@@ -775,18 +780,18 @@
 }
 
 .priority-slider::-webkit-slider-thumb:hover {
-  transform: scale(1.2);
+  transform: scale(1.15);
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3), 0 0 0 2px rgba(59, 130, 246, 0.3);
 }
 
 .priority-slider::-webkit-slider-thumb:active {
   cursor: grabbing;
-  transform: scale(1.1);
+  transform: scale(1.05);
 }
 
 .priority-slider::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
   background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
   cursor: grab;
@@ -796,44 +801,17 @@
 }
 
 .priority-slider::-moz-range-thumb:hover {
-  transform: scale(1.2);
+  transform: scale(1.15);
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3), 0 0 0 2px rgba(59, 130, 246, 0.3);
 }
 
 .priority-slider::-moz-range-thumb:active {
   cursor: grabbing;
-  transform: scale(1.1);
+  transform: scale(1.05);
 }
 
 .priority-labels {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 3px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.priority-labels span {
-  transition: all 0.2s;
-  opacity: 0.7;
-}
-
-.priority-labels span:hover {
-  opacity: 1;
-}
-
-.priority-labels .priority-high {
-  color: #e53e3e;
-}
-
-.priority-labels .priority-normal {
-  color: #f59e0b;
-}
-
-.priority-labels .priority-low {
-  color: #9ca3af;
+  display: none;
 }
 
 /* Color-coded priority badges in lists */
