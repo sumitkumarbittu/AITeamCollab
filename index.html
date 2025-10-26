@@ -56,6 +56,12 @@
         </svg>
         Calendar
       </div>
+      <div class="nav-item" data-view="github">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
+        </svg>
+        GitHub
+      </div>
 
     </div>
   </div>
@@ -325,6 +331,46 @@
           </div>
         </div>
       </section>
+
+      <!-- GitHub Section -->
+      <section id="github-view" class="view-section" style="display:none;">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">ArshCypherZ/CBIT Repository</h3>
+          </div>
+          <div style="text-align: center; padding: 10px;">
+            <button id="load-github-btn" class="btn btn-primary">Refresh Data</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Repository Statistics</h3>
+          </div>
+          <div id="github-stats">Loading statistics...</div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Issues</h3>
+          </div>
+          <div id="github-issues">Repository issues will appear here</div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Pull Requests</h3>
+          </div>
+          <div id="github-prs">Repository pull requests will appear here</div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Live Changes</h3>
+          </div>
+          <div id="github-changes">Live repository changes will appear here</div>
+        </div>
+      </section>
     </div>
   </div>
 
@@ -361,5 +407,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
   <script src="script.js"></script>
+  <script src="github.js"></script>
 </body>
 </html>
