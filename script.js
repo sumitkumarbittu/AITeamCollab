@@ -1,3 +1,39 @@
+// Global function to show views - accessible from anywhere
+window.showView = function(view) {
+  console.log(`🧭 showView called: "${view}"`);
+  
+  // Update active state in navigation
+  document.querySelectorAll('.nav-item').forEach(i => {
+    i.classList.remove('active');
+    if (i.dataset.view === view) {
+      i.classList.add('active');
+    }
+  });
+
+  // Update header
+  const viewTitle = document.getElementById('view-title');
+  const viewSubtitle = document.getElementById('view-subtitle');
+  if (viewTitle) {
+    viewTitle.textContent = view.charAt(0).toUpperCase() + view.slice(1);
+  }
+  if (viewSubtitle) {
+    viewSubtitle.textContent = getViewSubtitle(view);
+  }
+
+  // Show/hide views
+  document.querySelectorAll('.view-section').forEach(sec => sec.style.display = 'none');
+  const targetView = document.getElementById(`${view}-view`);
+  if (targetView) {
+    targetView.style.display = 'block';
+    console.log(`✅ Showing view: ${view}`);
+  } else {
+    console.error(`❌ View not found: ${view}-view`);
+  }
+
+  // Load data for the view
+  loadViewData(view);
+}
+
 // Simple navigation for PS16 Collaborative Workspace
 document.addEventListener('DOMContentLoaded', () => {
   console.log('🚀 PS16 Workspace loaded');
@@ -6,21 +42,9 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.nav-item').forEach(item => {
     item.addEventListener('click', () => {
       const view = item.dataset.view;
-
-      // Update active state
-      document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-      item.classList.add('active');
-
-      // Update header
-      document.getElementById('view-title').textContent = view.charAt(0).toUpperCase() + view.slice(1);
-      document.getElementById('view-subtitle').textContent = getViewSubtitle(view);
-
-      // Show/hide views
-      document.querySelectorAll('.view-section').forEach(sec => sec.style.display = 'none');
-      document.getElementById(`${view}-view`).style.display = 'block';
-
-      // Load data for the view
-      loadViewData(view);
+      if (view) {
+        showView(view);
+      }
     });
   });
 
@@ -38,7 +62,8 @@ function getViewSubtitle(view) {
     graph: 'Visual project and task relationships',
     projects: 'Manage your projects and track progress',
     tasks: 'Create and manage tasks for your projects',
-    attachments: 'Upload and manage project files'
+    attachments: 'Upload and manage project files',
+    alerts: 'Stay updated with important notifications and alerts'
   };
   return subtitles[view] || '';
 }
@@ -59,6 +84,9 @@ async function loadViewData(view) {
       break;
     case 'tasks':
       await loadTasks();
+      break;
+    case 'alerts':
+      await loadAlerts();
       break;
     case 'attachments':
       await loadTasksForSelect();
@@ -269,10 +297,8 @@ document.getElementById('create-project-form').addEventListener('submit', async 
       }
       
       loadProjects();
-      // Refresh activity widget immediately (if available)
-      if (typeof window !== 'undefined' && window.refreshActivityWidget) {
-        window.refreshActivityWidget();
-      }
+      // Refresh activity widget immediately
+      refreshActivityLog();
     } else {
       alert(editId ? 'Failed to update project' : 'Failed to create project');
     }
@@ -328,10 +354,8 @@ document.getElementById('create-task-form').addEventListener('submit', async (e)
       }
       
       loadTasks();
-      // Refresh activity widget immediately (if available)
-      if (typeof window !== 'undefined' && window.refreshActivityWidget) {
-        window.refreshActivityWidget();
-      }
+      // Refresh activity widget immediately
+      refreshActivityLog();
     } else {
       alert(editId ? 'Failed to update task' : 'Failed to create task');
     }
@@ -396,10 +420,8 @@ async function deleteProject(id) {
   try {
     await fetch(`/api/projects/${id}`, { method: 'DELETE' });
     loadProjects();
-    // Refresh activity widget immediately (if available)
-    if (typeof window !== 'undefined' && window.refreshActivityWidget) {
-      window.refreshActivityWidget();
-    }
+    // Refresh activity widget immediately
+    refreshActivityLog();
   } catch (error) {
     console.error('Error deleting project:', error);
   }
@@ -410,10 +432,8 @@ async function deleteTask(id) {
   try {
     await fetch(`/api/tasks/${id}`, { method: 'DELETE' });
     loadTasks();
-    // Refresh activity widget immediately (if available)
-    if (typeof window !== 'undefined' && window.refreshActivityWidget) {
-      window.refreshActivityWidget();
-    }
+    // Refresh activity widget immediately
+    refreshActivityLog();
   } catch (error) {
     console.error('Error deleting task:', error);
   }
@@ -452,10 +472,8 @@ document.getElementById('upload-form').addEventListener('submit', async (e) => {
       e.target.reset();
       document.getElementById('file-name-display').textContent = '';
       loadAttachments(); // Refresh the all attachments view
-      // Refresh activity widget immediately (if available)
-      if (typeof window !== 'undefined' && window.refreshActivityWidget) {
-        window.refreshActivityWidget();
-      }
+      // Refresh activity widget immediately
+      refreshActivityLog();
     } else {
       const error = await res.json();
       alert(`❌ Upload failed: ${error.error || res.statusText}`);
@@ -505,10 +523,8 @@ async function deleteAttachment(id) {
   try {
     await fetch(`/api/attachments/${id}`, { method: 'DELETE' });
     loadAttachments(); // Refresh the all attachments view
-    // Refresh activity widget immediately (if available)
-    if (typeof window !== 'undefined' && window.refreshActivityWidget) {
-      window.refreshActivityWidget();
-    }
+    // Refresh activity widget immediately
+    refreshActivityLog();
     alert('Attachment deleted');
   } catch (error) {
     console.error('Error deleting attachment:', error);
@@ -526,6 +542,14 @@ const activityHeader = document.getElementById('activity-header');
 const activityToggleBtn = document.getElementById('toggle-activity');
 const activityBody = document.getElementById('activity-body');
 const activityContent = document.getElementById('activity-content');
+
+// Helper function to refresh activity widget after any data modification
+function refreshActivityLog() {
+  if (typeof window !== 'undefined' && window.refreshActivityWidget) {
+    console.log('📊 Refreshing activity log after data change...');
+    window.refreshActivityWidget();
+  }
+}
 
 // Get minimized buttons
 const activityMinimizedBtn = document.getElementById('activity-minimized-btn');
@@ -553,7 +577,7 @@ function resetActivityIdleTimer() {
 function startActivityInitialTimer() {
   activityInitialTimer = setTimeout(() => {
     minimizeActivityWidget();
-  }, 5000); // 5 seconds on load
+  }, 2000); // 5 seconds on load
 }
 
 // Toggle minimize/expand for activity widget
@@ -649,77 +673,24 @@ function formatObjectType(objectType) {
   return types[objectType.toLowerCase()] || { emoji: '📄', name: objectType };
 }
 
+// Enhanced Activity Widget State
+let allActivities = [];
+let activityFilters = {
+  type: 'all',
+  action: 'all',
+  search: ''
+};
+
 async function loadActivityWidget() {
-  console.log('🔍 WIDGET: Loading activity logs...');
+  console.log('🔍 WIDGET: Loading enhanced activity logs...');
   try {
     const res = await fetch('/api/activity');
     const data = await res.json();
+    allActivities = data; // Store all activities
     console.log('📊 WIDGET: Received', data.length, 'activities from API');
 
-    if (activityContent) {
-      activityContent.innerHTML = '';
-
-      if (data.length === 0) {
-        activityContent.innerHTML = `
-          <div class="activity-loading">
-            <p style="color: #999;">No activity yet</p>
-            <small style="color: #ccc;">Activity will appear here as you work</small>
-          </div>
-        `;
-        // Update footer count
-        const countEl = document.querySelector('.activity-count');
-        if (countEl) countEl.textContent = '0 activities';
-        return;
-      }
-
-      // Get recent activities (last 15)
-      const recentActivities = data.slice(-15).reverse();
-      
-      console.log('📋 WIDGET: Displaying activities:', recentActivities.map(a => `${a.action_type} on ${a.object_type}`));
-      
-      recentActivities.forEach(log => {
-        const actionDetails = getActionDetails(log.action_type);
-        const objectDetails = formatObjectType(log.object_type);
-        const relativeTime = getRelativeTime(log.timestamp);
-        
-        const div = document.createElement('div');
-        div.className = `activity-item ${actionDetails.class}`;
-        div.innerHTML = `
-          <div class="activity-item-header">
-            <div class="activity-icon ${actionDetails.class}">
-              ${actionDetails.icon}
-            </div>
-            <div class="activity-details">
-              <div class="activity-action">
-                ${actionDetails.text}
-              </div>
-              <div class="activity-object">
-                <span class="activity-object-type">${objectDetails.emoji} ${objectDetails.name}</span>
-                <span>#${log.object_id}</span>
-              </div>
-            </div>
-            <div class="activity-timestamp">${relativeTime}</div>
-          </div>
-        `;
-        activityContent.appendChild(div);
-      });
-
-      // Update footer count
-      const countEl = document.querySelector('.activity-count');
-      if (countEl) {
-        countEl.textContent = `${data.length} ${data.length === 1 ? 'activity' : 'activities'}`;
-      }
-
-      // Update minimized button badge
-      if (activityMinimizedBtn) {
-        const badge = activityMinimizedBtn.querySelector('.notification-badge');
-        if (badge) {
-          badge.textContent = data.length > 99 ? '99+' : data.length;
-        }
-      }
-
-      console.log('✅ WIDGET: Activity widget updated successfully');
-    }
+    renderActivityWidget();
+    
   } catch (error) {
     console.error('❌ WIDGET ERROR:', error);
     if (activityContent) {
@@ -729,6 +700,211 @@ async function loadActivityWidget() {
           <small style="color: #999;">${error.message}</small>
         </div>
       `;
+    }
+  }
+}
+
+function renderActivityWidget() {
+  if (!activityContent) return;
+  
+  // Apply filters
+  let filteredActivities = allActivities;
+  
+  // Filter by type
+  if (activityFilters.type !== 'all') {
+    filteredActivities = filteredActivities.filter(a => 
+      a.object_type.toLowerCase() === activityFilters.type
+    );
+  }
+  
+  // Filter by action
+  if (activityFilters.action !== 'all') {
+    filteredActivities = filteredActivities.filter(a => 
+      a.action_type.toLowerCase() === activityFilters.action
+    );
+  }
+  
+  // Filter by search
+  if (activityFilters.search) {
+    const searchLower = activityFilters.search.toLowerCase();
+    filteredActivities = filteredActivities.filter(a => {
+      const objectName = formatObjectType(a.object_type).name.toLowerCase();
+      const actionName = getActionDetails(a.action_type).text.toLowerCase();
+      return objectName.includes(searchLower) || 
+             actionName.includes(searchLower) ||
+             (a.description && a.description.toLowerCase().includes(searchLower)) ||
+             a.object_id.toString().includes(searchLower);
+    });
+  }
+  
+  activityContent.innerHTML = '';
+  
+  if (filteredActivities.length === 0) {
+    const isFiltered = activityFilters.type !== 'all' || activityFilters.action !== 'all' || activityFilters.search;
+    
+    if (isFiltered) {
+      activityContent.innerHTML = `
+        <div class="activity-empty-filtered">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+          <p>No activities match your filters</p>
+          <button onclick="clearActivityFilters()">Clear Filters</button>
+        </div>
+      `;
+    } else {
+      activityContent.innerHTML = `
+        <div class="activity-loading">
+          <p style="color: #999;">No activity yet</p>
+          <small style="color: #ccc;">Activity will appear here as you work</small>
+        </div>
+      `;
+    }
+    
+    updateActivityFooter(0, filteredActivities.length);
+    return;
+  }
+  
+  // Get recent activities (last 20)
+  const recentActivities = filteredActivities.slice(-20).reverse();
+  
+  console.log('📋 WIDGET: Displaying', recentActivities.length, 'filtered activities');
+  
+  recentActivities.forEach(log => {
+    const actionDetails = getActionDetails(log.action_type);
+    const objectDetails = formatObjectType(log.object_type);
+    const relativeTime = getRelativeTime(log.timestamp);
+    const fullTime = new Date(log.timestamp).toLocaleString();
+    
+    // Fetch additional details for comprehensive display
+    const metadataHTML = buildActivityMetadata(log);
+    
+    const div = document.createElement('div');
+    div.className = `activity-item ${actionDetails.class}`;
+    div.innerHTML = `
+      <div class="activity-item-header">
+        <div class="activity-icon ${actionDetails.class}">
+          ${actionDetails.icon}
+        </div>
+        <div class="activity-details">
+          <div class="activity-action">
+            ${actionDetails.text}
+          </div>
+          <div class="activity-object">
+            <span class="activity-object-type">${objectDetails.emoji} ${objectDetails.name}</span>
+            <span style="color: #9ca3af;">#${log.object_id}</span>
+          </div>
+          ${metadataHTML}
+        </div>
+        <div class="activity-timestamp" title="${fullTime}">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          ${relativeTime}
+        </div>
+      </div>
+    `;
+    activityContent.appendChild(div);
+  });
+  
+  updateActivityFooter(allActivities.length, filteredActivities.length);
+}
+
+// Build comprehensive metadata display
+function buildActivityMetadata(log) {
+  let metadata = '<div class="activity-metadata">';
+  
+  // Add description if available
+  if (log.description) {
+    metadata += `<div class="activity-description">${escapeHtml(log.description)}</div>`;
+  }
+  
+  // Add user if available
+  if (log.user_name || log.performed_by) {
+    metadata += `
+      <div class="activity-meta-row">
+        <span class="activity-meta-label">👤 By:</span>
+        <span class="activity-meta-value">${log.user_name || log.performed_by || 'System'}</span>
+      </div>
+    `;
+  }
+  
+  // Add project info if available
+  if (log.project_name) {
+    metadata += `
+      <div class="activity-meta-row">
+        <span class="activity-meta-label">📁 Project:</span>
+        <span class="activity-meta-value">${log.project_name}</span>
+      </div>
+    `;
+  }
+  
+  // Add status if available
+  if (log.status) {
+    const statusEmoji = {
+      'todo': '📝',
+      'in_progress': '🔄',
+      'done': '✅',
+      'overdue': '⚠️'
+    };
+    metadata += `
+      <div class="activity-meta-row">
+        <span class="activity-meta-label">📊 Status:</span>
+        <span class="activity-meta-value">${statusEmoji[log.status] || ''} ${log.status}</span>
+      </div>
+    `;
+  }
+  
+  // Add priority if available
+  if (log.priority) {
+    const priorityNames = {
+      1: '🔴 Urgent',
+      2: '🟠 High',
+      3: '🟡 Medium',
+      4: '🔵 Low',
+      5: '⚪ Minimal'
+    };
+    metadata += `
+      <div class="activity-meta-row">
+        <span class="activity-meta-label">⚡ Priority:</span>
+        <span class="activity-meta-value">${priorityNames[log.priority] || 'N/A'}</span>
+      </div>
+    `;
+  }
+  
+  metadata += '</div>';
+  return metadata;
+}
+
+// Helper to escape HTML
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// Update footer with counts
+function updateActivityFooter(total, filtered) {
+  const countEl = document.querySelector('.activity-count');
+  const statusEl = document.querySelector('.activity-filter-status');
+  
+  if (countEl) {
+    countEl.textContent = `${total} ${total === 1 ? 'activity' : 'activities'}`;
+  }
+  
+  if (statusEl) {
+    if (filtered < total) {
+      statusEl.textContent = `(${filtered} shown)`;
+    } else {
+      statusEl.textContent = '';
+    }
+  }
+  
+  // Update minimized button badge
+  if (activityMinimizedBtn) {
+    const badge = activityMinimizedBtn.querySelector('.notification-badge');
+    if (badge) {
+      badge.textContent = total > 99 ? '99+' : total;
     }
   }
 }
@@ -745,8 +921,147 @@ if (activityWidget && activityContent) {
   };
 
   console.log('✅ WIDGET INIT: Activity widget fully initialized');
+  
+  // Set up filter buttons
+  document.querySelectorAll('.activity-filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      // Toggle active state
+      document.querySelectorAll('.activity-filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      
+      // Update filter and re-render
+      activityFilters.type = btn.dataset.filter;
+      renderActivityWidget();
+      
+      // Show/hide clear button
+      updateClearButtonVisibility();
+      
+      console.log('🎨 Activity filter changed to:', activityFilters.type);
+    });
+  });
+  
+  // Set up action buttons
+  document.querySelectorAll('.activity-action-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      // Toggle active state
+      document.querySelectorAll('.activity-action-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      
+      // Update filter and re-render
+      activityFilters.action = btn.dataset.action;
+      renderActivityWidget();
+      
+      // Show/hide clear button
+      updateClearButtonVisibility();
+      
+      console.log('🎨 Activity action filter changed to:', activityFilters.action);
+    });
+  });
+  
+  // Set up search input
+  const searchInput = document.getElementById('activity-search');
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      activityFilters.search = e.target.value;
+      renderActivityWidget();
+      updateClearButtonVisibility();
+    });
+    
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        searchInput.value = '';
+        activityFilters.search = '';
+        renderActivityWidget();
+        updateClearButtonVisibility();
+      }
+    });
+  }
+  
+  // Set up clear filters button
+  const clearFiltersBtn = document.getElementById('clear-activity-filters');
+  if (clearFiltersBtn) {
+    clearFiltersBtn.addEventListener('click', () => {
+      clearActivityFilters();
+    });
+  }
+  
+  // Set up clear all activity button
+  const clearAllBtn = document.getElementById('clear-all-activity');
+  if (clearAllBtn) {
+    clearAllBtn.addEventListener('click', async () => {
+      const confirmed = confirm('⚠️ Are you sure you want to clear ALL activity logs?\n\nThis action cannot be undone and will permanently delete all activity history.');
+      
+      if (!confirmed) return;
+      
+      try {
+        console.log('🗑️ Clearing all activity logs...');
+        
+        const res = await fetch('/api/activity/clear', {
+          method: 'DELETE'
+        });
+        
+        if (res.ok) {
+          const data = await res.json();
+          console.log(`✅ Successfully cleared ${data.deleted_count || 'all'} activity logs`);
+          
+          // Clear the local activities array
+          allActivities = [];
+          
+          // Re-render to show empty state
+          renderActivityWidget();
+          
+          // Show success message
+          alert(`✅ Successfully cleared all activity logs!`);
+        } else {
+          const error = await res.json();
+          console.error('❌ Failed to clear activity logs:', error);
+          alert('❌ Failed to clear activity logs. Please try again.');
+        }
+      } catch (error) {
+        console.error('❌ Error clearing activity logs:', error);
+        alert('❌ Error clearing activity logs. Please try again.');
+      }
+    });
+  }
+  
 } else {
   console.error('❌ WIDGET INIT: Activity widget elements missing');
+}
+
+// Global function to clear activity filters
+window.clearActivityFilters = function() {
+  activityFilters = {
+    type: 'all',
+    action: 'all',
+    search: ''
+  };
+  
+  // Reset UI
+  document.querySelectorAll('.activity-filter-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.activity-filter-btn[data-filter="all"]').classList.add('active');
+  
+  document.querySelectorAll('.activity-action-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.activity-action-btn[data-action="all"]').classList.add('active');
+  
+  const searchInput = document.getElementById('activity-search');
+  if (searchInput) searchInput.value = '';
+  
+  renderActivityWidget();
+  updateClearButtonVisibility();
+  
+  console.log('🔄 Activity filters cleared');
+};
+
+// Update clear button visibility based on active filters
+function updateClearButtonVisibility() {
+  const clearBtn = document.getElementById('clear-activity-filters');
+  if (!clearBtn) return;
+  
+  const hasFilters = activityFilters.type !== 'all' || 
+                     activityFilters.action !== 'all' || 
+                     activityFilters.search !== '';
+  
+  clearBtn.style.display = hasFilters ? 'flex' : 'none';
 }
 
 // ========== Make Activity Widget Draggable ==========
@@ -813,7 +1128,7 @@ function resetChatIdleTimer() {
 function startChatInitialTimer() {
   chatInitialTimer = setTimeout(() => {
     minimizeChatWidget();
-  }, 5000); // 5 seconds on load
+  }, 2000); // 5 seconds on load
 }
 
 // Chat widget functionality
@@ -922,6 +1237,54 @@ document.addEventListener('mousemove', (e) => {
 });
 
 document.addEventListener('mouseup', () => isResizing = false);
+
+// ========== Drag Activity Widget to Resize ==========
+let isResizingActivity = false, startXActivity, startYActivity, startWidthActivity, startHeightActivity;
+const activityResizeHandle = document.getElementById('activity-resize-handle');
+
+if (activityResizeHandle && activityWidget) {
+  activityResizeHandle.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    e.stopPropagation(); // Prevent dragging widget while resizing
+    isResizingActivity = true;
+    startXActivity = e.clientX;
+    startYActivity = e.clientY;
+    const rect = activityWidget.getBoundingClientRect();
+    startWidthActivity = rect.width;
+    startHeightActivity = rect.height;
+    console.log('🔧 Activity widget resize started');
+  });
+}
+
+document.addEventListener('mousemove', (e) => {
+  if (!isResizingActivity) return;
+  if (activityWidget) {
+    // Calculate new dimensions (minimum 280px width, 300px height)
+    const newWidth = Math.max(280, startWidthActivity + (e.clientX - startXActivity));
+    const newHeight = Math.max(300, startHeightActivity + (e.clientY - startYActivity));
+    
+    activityWidget.style.width = `${newWidth}px`;
+    activityWidget.style.height = `${newHeight}px`;
+    
+    // Adjust body height to accommodate filters and footer
+    const activityBody = document.getElementById('activity-body');
+    if (activityBody) {
+      // Calculate available height: total height - header - filters - footer
+      const headerHeight = document.getElementById('activity-header')?.offsetHeight || 60;
+      const filtersHeight = document.getElementById('activity-filters')?.offsetHeight || 120;
+      const footerHeight = document.getElementById('activity-footer')?.offsetHeight || 40;
+      const bodyHeight = newHeight - headerHeight - filtersHeight - footerHeight - 40; // 40px padding
+      activityBody.style.height = `${Math.max(150, bodyHeight)}px`;
+    }
+  }
+});
+
+document.addEventListener('mouseup', () => {
+  if (isResizingActivity) {
+    isResizingActivity = false;
+    console.log('✅ Activity widget resize completed');
+  }
+});
 
 // ========== Chat Message Functions ==========
 // Make deleteMessage globally accessible
@@ -1232,6 +1595,18 @@ async function loadGraph() {
       console.log('📊 GRAPH: Nodes in instance:', cy.nodes().length);
       console.log('📊 GRAPH: Edges in instance:', cy.edges().length);
       
+      // Log node types for debugging
+      const projectNodes = cy.nodes('[type="project"]').length;
+      const taskNodes = cy.nodes('[type="task"]').length;
+      console.log(`📁 Project nodes: ${projectNodes}`);
+      console.log(`✓ Task nodes: ${taskNodes}`);
+      
+      // Sample node IDs for debugging
+      if (cy.nodes().length > 0) {
+        const sampleNode = cy.nodes()[0];
+        console.log(`🔍 Sample node ID: "${sampleNode.data('id')}", Type: "${sampleNode.data('type')}", Label: "${sampleNode.data('label')}"`);
+      }
+      
       // Multiple passes to force edge visibility
       const forceEdgeVisibility = () => {
         if (cy && cy.edges()) {
@@ -1272,76 +1647,203 @@ async function loadGraph() {
         });
       });
       
-      // Add interactive hover effects
+      // ========== INTERACTIVE GRAPH FEATURES ==========
+      
+      console.log('🎮 Setting up interactive graph features...');
+      
+      // Enhanced hover effects with animation
       cy.on('mouseover', 'node', function(evt) {
         const node = evt.target;
-        node.style({
-          'border-width': 4,
-          'border-color': '#f39c12',
-          'cursor': 'pointer'
+        const nodeType = node.data('type');
+        const nodeId = node.data('id');
+        
+        node.animate({
+          style: {
+            'border-width': 5,
+            'border-color': '#f39c12',
+            'box-shadow': '0 0 20px rgba(243, 156, 18, 0.6)',
+            'z-index': 999
+          },
+          duration: 200
         });
+        
+        // Show visual tooltip
+        const label = node.data('label');
+        const type = nodeType === 'project' ? '📁 Project' : '✓ Task';
+        console.log(`🎯 Hover: ${type} "${label}" (ID: ${nodeId}) - Click to edit!`);
+        
+        // Change cursor
+        const cyContainer = document.getElementById('cy');
+        if (cyContainer) cyContainer.style.cursor = 'pointer';
       });
       
       cy.on('mouseout', 'node', function(evt) {
         const node = evt.target;
         const nodeType = node.data('type');
-        node.style({
-          'border-width': 2,
-          'border-color': nodeType === 'project' ? '#2980b9' : '#2c3e50'
+        
+        node.animate({
+          style: {
+            'border-width': 2,
+            'border-color': nodeType === 'project' ? '#2980b9' : '#2c3e50',
+            'box-shadow': 'none',
+            'z-index': 10
+          },
+          duration: 200
         });
+        
+        // Reset cursor
+        document.getElementById('cy').style.cursor = 'grab';
       });
       
-      // Add click handlers for editing
+      // Click to edit - Projects
       cy.on('tap', 'node[type="project"]', function(evt) {
+        evt.preventDefault();
         const node = evt.target;
-        const projectId = node.data('id').replace('project-', '');
+        const nodeId = node.data('id');
         const projectName = node.data('label');
         
-        // Fetch full project details and edit
+        // Extract numeric ID from formats like "project-1" or "project_1"
+        const projectId = nodeId.replace(/project[-_]/, '');
+        
+        console.log(`📁 CLICK DETECTED: Project "${projectName}" (Node ID: ${nodeId}, Extracted ID: ${projectId})`);
+        
+        // Visual feedback - pulse animation
+        node.animate({
+          style: {
+            'border-color': '#3498db',
+            'border-width': 8
+          },
+          duration: 200,
+          complete: function() {
+            node.style({
+              'border-width': 2,
+              'border-color': '#2980b9'
+            });
+          }
+        });
+        
+        // Fetch and edit
+        console.log(`🔍 Fetching project data from /api/projects/${projectId}...`);
         fetch(`/api/projects/${projectId}`)
-          .then(res => res.json())
+          .then(res => {
+            console.log(`📡 Response status: ${res.status}`);
+            if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to fetch project`);
+            return res.json();
+          })
           .then(project => {
+            console.log('✅ Project data loaded:', project);
+            console.log('🔄 Switching to projects view...');
             showView('projects');
             setTimeout(() => {
-              editProject(
-                project.id,
-                project.name || '',
-                project.start_date || '',
-                project.end_date || '',
-                project.description || ''
-              );
+              console.log('✏️ Calling editProject function...');
+              if (typeof editProject === 'function') {
+                editProject(
+                  project.id,
+                  project.name || '',
+                  project.start_date || '',
+                  project.end_date || '',
+                  project.description || ''
+                );
+                console.log('✅ Edit form populated successfully');
+              } else {
+                console.error('❌ editProject function not found!');
+                alert('Edit function not available. Please refresh the page.');
+              }
             }, 300);
           })
           .catch(err => {
-            console.error('Error fetching project:', err);
-            alert('Failed to load project details');
+            console.error('❌ Error fetching project:', err);
+            alert(`⚠️ Failed to load project details: ${err.message}`);
           });
       });
       
+      // Click to edit - Tasks
       cy.on('tap', 'node[type="task"]', function(evt) {
+        evt.preventDefault();
         const node = evt.target;
-        const taskId = node.data('id').replace('task-', '');
+        const nodeId = node.data('id');
+        const taskLabel = node.data('label');
         
+        // Extract numeric ID from formats like "task-5" or "task_5"
+        const taskId = nodeId.replace(/task[-_]/, '');
+        
+        console.log(`✓ CLICK DETECTED: Task "${taskLabel}" (Node ID: ${nodeId}, Extracted ID: ${taskId})`);
+        
+        // Visual feedback - pulse animation
+        node.animate({
+          style: {
+            'border-color': '#3498db',
+            'border-width': 8
+          },
+          duration: 200,
+          complete: function() {
+            node.style({
+              'border-width': 2,
+              'border-color': '#2c3e50'
+            });
+          }
+        });
+        
+        // Navigate and edit
+        console.log('🔄 Switching to tasks view...');
         showView('tasks');
         setTimeout(() => {
-          editTask(parseInt(taskId));
+          console.log(`✏️ Calling editTask(${taskId})...`);
+          if (typeof editTask === 'function') {
+            editTask(parseInt(taskId));
+            console.log('✅ Edit form should be loading...');
+          } else {
+            console.error('❌ editTask function not found!');
+            alert('Edit function not available. Please refresh the page.');
+          }
         }, 300);
       });
       
-      // Add tooltip on hover
-      cy.on('mouseover', 'node', function(evt) {
+      // Double-click for quick edit (alternative interaction)
+      cy.on('dbltap', 'node', function(evt) {
         const node = evt.target;
-        const type = node.data('type');
-        const status = node.data('status');
-        
-        let tooltipText = `${type === 'project' ? '📁 Project' : '✓ Task'}: ${node.data('label')}`;
-        if (status) {
-          tooltipText += `\nStatus: ${status}`;
-        }
-        tooltipText += '\n\nClick to edit';
-        
-        node.data('tooltip', tooltipText);
+        console.log(`⚡ Double-click detected on: ${node.data('label')}`);
+        // Trigger single click handler
+        evt.target.trigger('tap');
       });
+      
+      // Visual feedback on edges hover
+      cy.on('mouseover', 'edge', function(evt) {
+        const edge = evt.target;
+        edge.animate({
+          style: {
+            'width': 6,
+            'line-color': '#f39c12',
+            'target-arrow-color': '#f39c12',
+            'opacity': 1
+          },
+          duration: 200
+        });
+      });
+      
+      cy.on('mouseout', 'edge', function(evt) {
+        const edge = evt.target;
+        const type = edge.data('type');
+        let color = '#3498db';
+        
+        if (type === 'belongs_to') color = '#28a745';
+        if (type === 'subtask') color = '#6f42c1';
+        if (type === 'depends_on') color = '#dc3545';
+        
+        edge.animate({
+          style: {
+            'width': 4,
+            'line-color': color,
+            'target-arrow-color': color,
+            'opacity': 0.95
+          },
+          duration: 200
+        });
+      });
+      
+      console.log('✅ All interactive event handlers registered successfully!');
+      console.log('🎯 Click any node to edit (Projects or Tasks)');
+      console.log('💡 TIP: Check console for detailed debugging info when clicking');
       
     } else {
       // Update existing instance
@@ -1414,7 +1916,38 @@ async function loadGraph() {
       }
     }
 
-    // Set up layout selector
+    // ========== ENHANCED GRAPH CONTROLS ==========
+    
+    // Update graph statistics
+    function updateGraphStats() {
+      if (!cy) return;
+      
+      const projectCount = cy.nodes('[type="project"]').length;
+      const taskCount = cy.nodes('[type="task"]').length;
+      const edgeCount = cy.edges().length;
+      const zoomLevel = Math.round(cy.zoom() * 100);
+      
+      const projectCountEl = document.getElementById('projectCount');
+      const taskCountEl = document.getElementById('taskCount');
+      const edgeCountEl = document.getElementById('edgeCount');
+      const zoomLevelEl = document.getElementById('zoomLevel');
+      
+      if (projectCountEl) projectCountEl.textContent = projectCount;
+      if (taskCountEl) taskCountEl.textContent = taskCount;
+      if (edgeCountEl) edgeCountEl.textContent = edgeCount;
+      if (zoomLevelEl) zoomLevelEl.textContent = zoomLevel + '%';
+      
+      console.log(`📊 Stats: ${projectCount} projects, ${taskCount} tasks, ${edgeCount} edges, ${zoomLevel}% zoom`);
+    }
+    
+    // Update stats on zoom and pan
+    cy.on('zoom', updateGraphStats);
+    cy.on('pan', updateGraphStats);
+    
+    // Initial stats update
+    setTimeout(updateGraphStats, 500);
+    
+    // Set up layout selector with enhanced options
     const layoutSelect = document.getElementById('layoutSelect');
     if (layoutSelect) {
       layoutSelect.onchange = (e) => {
@@ -1430,7 +1963,8 @@ async function loadGraph() {
               spacingFactor: 1.5,
               avoidOverlap: true,
               maximal: true,
-              animate: true
+              animate: true,
+              animationDuration: 500
             };
             break;
           case 'cose':
@@ -1439,7 +1973,29 @@ async function loadGraph() {
               animate: true,
               padding: 80,
               nodeOverlap: 20,
-              idealEdgeLength: 100
+              idealEdgeLength: 100,
+              nodeRepulsion: 400000,
+              edgeElasticity: 100,
+              gravity: 80,
+              numIter: 1000,
+              animationDuration: 500
+            };
+            break;
+          case 'concentric':
+            layoutConfig = {
+              name: 'concentric',
+              animate: true,
+              padding: 80,
+              startAngle: 3.14 / 2,
+              sweep: undefined,
+              clockwise: true,
+              equidistant: false,
+              minNodeSpacing: 50,
+              concentric: function(node) {
+                return node.data('type') === 'project' ? 2 : 1;
+              },
+              levelWidth: function() { return 2; },
+              animationDuration: 500
             };
             break;
           case 'grid':
@@ -1447,7 +2003,9 @@ async function loadGraph() {
               name: 'grid',
               padding: 80,
               avoidOverlap: true,
-              animate: true
+              avoidOverlapPadding: 20,
+              animate: true,
+              animationDuration: 500
             };
             break;
           case 'circle':
@@ -1455,7 +2013,37 @@ async function loadGraph() {
               name: 'circle',
               padding: 80,
               avoidOverlap: true,
-              animate: true
+              animate: true,
+              animationDuration: 500,
+              radius: undefined,
+              startAngle: 3.14 / 2,
+              sweep: undefined,
+              clockwise: true
+            };
+            break;
+          case 'dagre':
+            layoutConfig = {
+              name: 'breadthfirst',
+              directed: true,
+              padding: 100,
+              spacingFactor: 2,
+              avoidOverlap: true,
+              nodeDimensionsIncludeLabels: true,
+              animate: true,
+              animationDuration: 500
+            };
+            break;
+          case 'cola':
+            layoutConfig = {
+              name: 'cose',
+              animate: true,
+              padding: 100,
+              nodeOverlap: 30,
+              idealEdgeLength: 150,
+              nodeRepulsion: 500000,
+              edgeElasticity: 50,
+              gravity: 50,
+              animationDuration: 500
             };
             break;
           default:
@@ -1464,12 +2052,223 @@ async function loadGraph() {
               directed: true,
               padding: 80,
               spacingFactor: 1.5,
-              animate: true
+              animate: true,
+              animationDuration: 500
             };
         }
 
         cy.layout(layoutConfig).run();
         console.log('🔄 GRAPH: Layout changed to', layoutName);
+      };
+    }
+
+    // Zoom controls
+    const zoomInBtn = document.getElementById('zoomIn');
+    const zoomOutBtn = document.getElementById('zoomOut');
+    const fitGraphBtn = document.getElementById('fitGraph');
+    const resetViewBtn = document.getElementById('resetView');
+    
+    if (zoomInBtn) {
+      zoomInBtn.onclick = () => {
+        cy.zoom(cy.zoom() * 1.2);
+        cy.center();
+        console.log('🔍 Zoom In');
+      };
+    }
+    
+    if (zoomOutBtn) {
+      zoomOutBtn.onclick = () => {
+        cy.zoom(cy.zoom() * 0.8);
+        cy.center();
+        console.log('🔍 Zoom Out');
+      };
+    }
+    
+    if (fitGraphBtn) {
+      fitGraphBtn.onclick = () => {
+        cy.fit(50);
+        console.log('🔍 Fit to Screen');
+      };
+    }
+    
+    if (resetViewBtn) {
+      resetViewBtn.onclick = () => {
+        cy.zoom(1);
+        cy.center();
+        console.log('🔍 Reset View');
+      };
+    }
+
+    // Filter controls
+    const showProjectsCheckbox = document.getElementById('showProjects');
+    const showTasksCheckbox = document.getElementById('showTasks');
+    const showEdgesCheckbox = document.getElementById('showEdges');
+    
+    function applyFilters() {
+      if (!cy) return;
+      
+      const showProjects = showProjectsCheckbox ? showProjectsCheckbox.checked : true;
+      const showTasks = showTasksCheckbox ? showTasksCheckbox.checked : true;
+      const showEdges = showEdgesCheckbox ? showEdgesCheckbox.checked : true;
+      
+      // Show/hide projects
+      if (showProjects) {
+        cy.nodes('[type="project"]').style('display', 'element');
+      } else {
+        cy.nodes('[type="project"]').style('display', 'none');
+      }
+      
+      // Show/hide tasks
+      if (showTasks) {
+        cy.nodes('[type="task"]').style('display', 'element');
+      } else {
+        cy.nodes('[type="task"]').style('display', 'none');
+      }
+      
+      // Show/hide edges
+      if (showEdges) {
+        cy.edges().style('display', 'element');
+      } else {
+        cy.edges().style('display', 'none');
+      }
+      
+      updateGraphStats();
+      console.log('🎨 Filters applied:', { showProjects, showTasks, showEdges });
+    }
+    
+    if (showProjectsCheckbox) showProjectsCheckbox.onchange = applyFilters;
+    if (showTasksCheckbox) showTasksCheckbox.onchange = applyFilters;
+    if (showEdgesCheckbox) showEdgesCheckbox.onchange = applyFilters;
+
+    // Search and highlight functionality
+    const searchInput = document.getElementById('searchGraph');
+    const clearSearchBtn = document.getElementById('clearSearch');
+    let highlightedNodes = null;
+    
+    function searchNodes(searchTerm) {
+      if (!cy || !searchTerm) {
+        clearSearch();
+        return;
+      }
+      
+      const term = searchTerm.toLowerCase();
+      
+      // Reset all nodes to normal
+      cy.nodes().style({
+        'opacity': 0.3,
+        'border-width': 2
+      });
+      
+      cy.edges().style('opacity', 0.2);
+      
+      // Find matching nodes
+      highlightedNodes = cy.nodes().filter(function(node) {
+        const label = node.data('label').toLowerCase();
+        return label.includes(term);
+      });
+      
+      // Highlight matching nodes
+      highlightedNodes.style({
+        'opacity': 1,
+        'border-width': 4,
+        'border-color': '#f39c12'
+      });
+      
+      // Highlight connected edges
+      highlightedNodes.connectedEdges().style('opacity', 1);
+      
+      console.log(`🔍 Search: Found ${highlightedNodes.length} matching nodes for "${searchTerm}"`);
+      
+      // Fit view to highlighted nodes if any found
+      if (highlightedNodes.length > 0) {
+        cy.fit(highlightedNodes, 100);
+      }
+    }
+    
+    function clearSearch() {
+      if (!cy) return;
+      
+      cy.nodes().style({
+        'opacity': 1,
+        'border-width': 2
+      });
+      
+      cy.edges().style('opacity', 0.95);
+      
+      highlightedNodes = null;
+      
+      if (searchInput) searchInput.value = '';
+      
+      console.log('🔍 Search cleared');
+    }
+    
+    if (searchInput) {
+      searchInput.oninput = (e) => {
+        searchNodes(e.target.value);
+      };
+      
+      searchInput.onkeydown = (e) => {
+        if (e.key === 'Escape') {
+          clearSearch();
+        }
+      };
+    }
+    
+    if (clearSearchBtn) {
+      clearSearchBtn.onclick = clearSearch;
+    }
+
+    // Export graph as PNG
+    const exportBtn = document.getElementById('exportGraph');
+    if (exportBtn) {
+      exportBtn.onclick = () => {
+        if (!cy) {
+          alert('Graph not loaded');
+          return;
+        }
+        
+        try {
+          // Get PNG data
+          const png64 = cy.png({
+            output: 'blob',
+            bg: '#ffffff',
+            full: true,
+            scale: 2
+          });
+          
+          // Create download link
+          const url = URL.createObjectURL(png64);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `graph-${new Date().getTime()}.png`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+          
+          console.log('📸 Graph exported as PNG');
+          
+          // Visual feedback
+          exportBtn.innerHTML = `
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            Exported!
+          `;
+          
+          setTimeout(() => {
+            exportBtn.innerHTML = `
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+              </svg>
+              Export PNG
+            `;
+          }, 2000);
+          
+        } catch (error) {
+          console.error('❌ Export error:', error);
+          alert('Failed to export graph. Please try again.');
+        }
       };
     }
 
@@ -1560,10 +2359,43 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-// ========== Calendar Functionality ==========
+// ========== Enhanced Interactive Calendar Functionality ==========
 let calendar;
+let calendarTasks = [];
+let calendarFilters = {
+  todo: true,
+  in_progress: true,
+  done: true,
+  overdue: true
+};
+
+// Update calendar stats
+function updateCalendarStats(tasks) {
+  const total = tasks.length;
+  const completed = tasks.filter(t => t.status === 'done').length;
+  const pending = tasks.filter(t => t.status === 'todo' || t.status === 'in_progress').length;
+  const overdue = tasks.filter(t => t.status === 'overdue').length;
+  
+  const totalEl = document.getElementById('calTotalTasks');
+  const completedEl = document.getElementById('calCompletedTasks');
+  const pendingEl = document.getElementById('calPendingTasks');
+  const overdueEl = document.getElementById('calOverdueTasks');
+  
+  if (totalEl) totalEl.textContent = total;
+  if (completedEl) completedEl.textContent = completed;
+  if (pendingEl) pendingEl.textContent = pending;
+  if (overdueEl) overdueEl.textContent = overdue;
+  
+  console.log(`📊 Calendar Stats: ${total} total, ${completed} completed, ${pending} pending, ${overdue} overdue`);
+}
+
 async function loadCalendar() {
-  console.log('📅 CALENDAR: Loading calendar...');
+  console.log('📅 CALENDAR: Loading enhanced interactive calendar...');
+  
+  // Show loading overlay
+  const loadingEl = document.getElementById('calendarLoading');
+  if (loadingEl) loadingEl.style.display = 'flex';
+  
   try {
     const calendarEl = document.getElementById('calendar');
     if (!calendarEl) {
@@ -1572,8 +2404,9 @@ async function loadCalendar() {
     }
 
     if (calendar) {
-      calendar.render();
-      console.log('✅ CALENDAR: Calendar re-rendered');
+      calendar.refetchEvents();
+      console.log('✅ CALENDAR: Calendar refreshed');
+      if (loadingEl) loadingEl.style.display = 'none';
       return;
     }
 
@@ -1586,6 +2419,28 @@ async function loadCalendar() {
       },
       height: 'auto',
       aspectRatio: 1.5,
+      editable: true, // Enable drag and drop
+      droppable: true,
+      eventDurationEditable: true,
+      eventStartEditable: true,
+      selectable: true, // Enable date selection
+      selectMirror: true,
+      
+      // Date click - create new task
+      dateClick: function(info) {
+        console.log('📅 Date clicked:', info.dateStr);
+        const createQuickTask = confirm(`Create a new task for ${info.dateStr}?`);
+        if (createQuickTask) {
+          showView('tasks');
+          setTimeout(() => {
+            document.getElementById('task-due').value = info.dateStr;
+            document.getElementById('task-title').focus();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }, 300);
+        }
+      },
+      
+      // Fetch events with filtering
       events: async (info, successCallback, failureCallback) => {
         try {
           const from = info.startStr.split('T')[0];
@@ -1594,23 +2449,33 @@ async function loadCalendar() {
 
           const res = await fetch(`/api/calendar/tasks?from=${from}&to=${to}`);
           const tasks = await res.json();
+          
+          calendarTasks = tasks; // Store for stats
+          updateCalendarStats(tasks);
 
           if (res.ok) {
-            const events = tasks.filter(t => t.due_date).map(t => ({
+            // Apply filters
+            const filteredTasks = tasks.filter(t => {
+              if (!t.due_date) return false;
+              return calendarFilters[t.status] !== false;
+            });
+            
+            const events = filteredTasks.map(t => ({
               id: t.id,
               title: `${t.title}${t.assigned_to ? ` — ${t.assigned_to}` : ''}`,
               start: t.due_date,
-              backgroundColor: t.status === 'done' ? '#9AE19D' :
-                              t.status === 'overdue' ? '#E57373' :
-                              t.status === 'in_progress' ? '#FFD700' : '#AEDFF7',
-              borderColor: t.status === 'overdue' ? '#C62828' : '#424242',
+              backgroundColor: getTaskColor(t.status),
+              borderColor: getBorderColor(t.status),
+              textColor: '#ffffff',
               extendedProps: {
                 status: t.status,
-                assigned_to: t.assigned_to
+                assigned_to: t.assigned_to,
+                priority: t.priority,
+                project_id: t.project_id
               }
             }));
 
-            console.log(`📅 CALENDAR: Loaded ${events.length} events`);
+            console.log(`📅 CALENDAR: Loaded ${events.length} events (filtered from ${tasks.length})`);
             successCallback(events);
           } else {
             console.error('❌ CALENDAR: Failed to fetch tasks');
@@ -1619,11 +2484,15 @@ async function loadCalendar() {
         } catch (err) {
           console.error('❌ CALENDAR: Error fetching tasks:', err);
           failureCallback(err);
+        } finally {
+          if (loadingEl) loadingEl.style.display = 'none';
         }
       },
+      
+      // Event click - show details with better UI
       eventClick: async (info) => {
         try {
-          const res = await fetch(`/api/calendar/tasks/${info.event.id}`);
+          const res = await fetch(`/api/tasks/${info.event.id}`);
           const task = await res.json();
 
           if (res.ok) {
@@ -1633,13 +2502,30 @@ async function loadCalendar() {
               'done': '✅',
               'overdue': '⚠️'
             };
+            
+            const priorityText = {
+              1: '🔴 Urgent',
+              2: '🟠 High',
+              3: '🟡 Medium',
+              4: '🔵 Low',
+              5: '⚪ Minimal'
+            };
 
-            alert(`📋 ${task.title}\n` +
-                  `Assigned to: ${task.assigned_to || 'Unassigned'}\n` +
-                  `Status: ${statusEmoji[task.status] || '❓'} ${task.status}\n` +
-                  `Priority: ${task.priority || 'N/A'}\n` +
-                  `Due: ${task.due_date || 'No due date'}\n` +
-                  `${task.description ? `Description: ${task.description}` : ''}`);
+            const details = 
+              `📋 ${task.title}\n\n` +
+              `Status: ${statusEmoji[task.status] || '❓'} ${task.status}\n` +
+              `Priority: ${priorityText[task.priority] || 'N/A'}\n` +
+              `Assigned to: ${task.assigned_to || 'Unassigned'}\n` +
+              `Due: ${task.due_date || 'No due date'}\n` +
+              `\nClick OK to edit this task.`;
+            
+            const shouldEdit = confirm(details);
+            if (shouldEdit) {
+              showView('tasks');
+              setTimeout(() => {
+                editTask(task.id);
+              }, 300);
+            }
           } else {
             alert('Error loading task details');
           }
@@ -1648,16 +2534,83 @@ async function loadCalendar() {
           alert('Error loading task details');
         }
       },
+      
+      // Enhanced hover tooltip
       eventMouseEnter: (info) => {
-        // Show tooltip on hover
         const status = info.event.extendedProps.status;
         const assigned = info.event.extendedProps.assigned_to;
-        info.el.title = `Status: ${status}${assigned ? ` | Assigned: ${assigned}` : ''}`;
+        const priority = info.event.extendedProps.priority;
+        
+        const priorityText = {
+          1: '🔴 Urgent',
+          2: '🟠 High',
+          3: '🟡 Medium',
+          4: '🔵 Low',
+          5: '⚪ Minimal'
+        };
+        
+        info.el.title = `Status: ${status}\nPriority: ${priorityText[priority] || 'N/A'}${assigned ? `\nAssigned: ${assigned}` : ''}\n\n✨ Click for details • Drag to reschedule`;
+        info.el.style.cursor = 'move';
+      },
+      
+      // Drag and drop - update task date
+      eventDrop: async (info) => {
+        const newDate = info.event.start.toISOString().split('T')[0];
+        console.log(`🔄 Task ${info.event.id} moved to ${newDate}`);
+        
+        try {
+          const res = await fetch(`/api/tasks/${info.event.id}`);
+          const task = await res.json();
+          
+          if (res.ok) {
+            const updateRes = await fetch(`/api/tasks/${info.event.id}`, {
+              method: 'PUT',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({
+                ...task,
+                due_date: newDate
+              })
+            });
+            
+            if (updateRes.ok) {
+              console.log('✅ Task date updated successfully');
+              
+              // Refresh activity widget immediately
+              refreshActivityLog();
+              
+              // Show success feedback
+              info.el.style.animation = 'pulse 0.5s ease-in-out';
+              setTimeout(() => {
+                info.el.style.animation = '';
+              }, 500);
+            } else {
+              console.error('❌ Failed to update task');
+              info.revert();
+              alert('Failed to update task date. Please try again.');
+            }
+          }
+        } catch (err) {
+          console.error('❌ Error updating task:', err);
+          info.revert();
+          alert('Error updating task date');
+        }
+      },
+      
+      // Event resize (if enabled)
+      eventResize: (info) => {
+        console.log('Task duration changed:', info.event);
+        // Could implement multi-day task support here
       }
     });
 
     calendar.render();
-    console.log('✅ CALENDAR: Calendar initialized and rendered');
+    console.log('✅ CALENDAR: Enhanced interactive calendar initialized');
+    
+    // Set up filter controls
+    setupCalendarFilters();
+    
+    // Set up quick action buttons
+    setupCalendarButtons();
 
   } catch (err) {
     console.error('❌ CALENDAR ERROR:', err);
@@ -1665,6 +2618,90 @@ async function loadCalendar() {
     if (calendarEl) {
       calendarEl.innerHTML = '<div style="padding: 20px; text-align: center; color: #e74c3c;">Error loading calendar. Please check if tasks have due dates.</div>';
     }
+  } finally {
+    if (loadingEl) loadingEl.style.display = 'none';
+  }
+}
+
+// Helper functions for calendar
+function getTaskColor(status) {
+  const colors = {
+    'todo': '#3b82f6',
+    'in_progress': '#f59e0b', 
+    'done': '#10b981',
+    'overdue': '#ef4444'
+  };
+  return colors[status] || '#6b7280';
+}
+
+function getBorderColor(status) {
+  const colors = {
+    'todo': '#1e40af',
+    'in_progress': '#d97706',
+    'done': '#047857',
+    'overdue': '#991b1b'
+  };
+  return colors[status] || '#374151';
+}
+
+// Set up calendar filter controls
+function setupCalendarFilters() {
+  const filters = ['Todo', 'InProgress', 'Done', 'Overdue'];
+  
+  filters.forEach(filter => {
+    const checkbox = document.getElementById(`filter${filter}`);
+    if (checkbox) {
+      checkbox.addEventListener('change', (e) => {
+        const statusKey = filter.toLowerCase().replace('inprogress', 'in_progress');
+        calendarFilters[statusKey] = e.target.checked;
+        console.log(`🎨 Filter ${filter} ${e.target.checked ? 'enabled' : 'disabled'}`);
+        if (calendar) {
+          calendar.refetchEvents();
+        }
+      });
+    }
+  });
+}
+
+// Set up calendar action buttons
+function setupCalendarButtons() {
+  const todayBtn = document.getElementById('todayBtn');
+  const refreshBtn = document.getElementById('refreshCalendar');
+  const addTaskBtn = document.getElementById('addCalendarTask');
+  
+  if (todayBtn) {
+    todayBtn.addEventListener('click', () => {
+      if (calendar) {
+        calendar.today();
+        console.log('📅 Jumped to today');
+      }
+    });
+  }
+  
+  if (refreshBtn) {
+    refreshBtn.addEventListener('click', () => {
+      if (calendar) {
+        const loadingEl = document.getElementById('calendarLoading');
+        if (loadingEl) loadingEl.style.display = 'flex';
+        calendar.refetchEvents();
+        setTimeout(() => {
+          if (loadingEl) loadingEl.style.display = 'none';
+        }, 500);
+        console.log('🔄 Calendar refreshed');
+      }
+    });
+  }
+  
+  if (addTaskBtn) {
+    addTaskBtn.addEventListener('click', () => {
+      showView('tasks');
+      setTimeout(() => {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('task-due').value = today;
+        document.getElementById('task-title').focus();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 300);
+    });
   }
 }
 
@@ -1925,3 +2962,405 @@ window.editTask = async function(taskId) {
     alert('Failed to load task details');
   }
 }
+
+// ============================================
+// EXPORT DATA FUNCTIONALITY
+// ============================================
+
+const exportModal = document.getElementById('export-modal');
+const exportDataBtn = document.getElementById('export-data-btn');
+const closeExportModal = document.getElementById('close-export-modal');
+const cancelExportBtn = document.getElementById('cancel-export');
+const confirmExportBtn = document.getElementById('confirm-export');
+
+// Open export modal
+if (exportDataBtn) {
+  exportDataBtn.addEventListener('click', () => {
+    exportModal.style.display = 'flex';
+    console.log('📥 Export modal opened');
+  });
+}
+
+// Close export modal
+function closeExportModalFunc() {
+  exportModal.style.display = 'none';
+}
+
+if (closeExportModal) closeExportModal.addEventListener('click', closeExportModalFunc);
+if (cancelExportBtn) cancelExportBtn.addEventListener('click', closeExportModalFunc);
+
+// Close modal on outside click
+if (exportModal) {
+  exportModal.addEventListener('click', (e) => {
+    if (e.target === exportModal) {
+      closeExportModalFunc();
+    }
+  });
+}
+
+// Confirm export button
+if (confirmExportBtn) {
+  confirmExportBtn.addEventListener('click', async () => {
+    try {
+      console.log('📥 Starting data export...');
+      
+      // Get selected data types
+      const includeProjects = document.getElementById('export-projects').checked;
+      const includeTasks = document.getElementById('export-tasks').checked;
+      const includeAttachments = document.getElementById('export-attachments').checked;
+      const includeActivity = document.getElementById('export-activity').checked;
+      const includeChat = document.getElementById('export-chat').checked;
+      
+      // Get selected format
+      const format = document.querySelector('input[name="export-format"]:checked').value;
+      
+      // Validate selection
+      if (!includeProjects && !includeTasks && !includeAttachments && !includeActivity && !includeChat) {
+        alert('⚠️ Please select at least one data type to export');
+        return;
+      }
+      
+      // Show loading state
+      confirmExportBtn.disabled = true;
+      confirmExportBtn.innerHTML = `
+        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="animation: spin 1s linear infinite;">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+        </svg>
+        Exporting...
+      `;
+      
+      // Fetch data
+      const exportData = {};
+      
+      if (includeProjects) {
+        const res = await fetch('/api/projects');
+        exportData.projects = await res.json();
+        console.log(`✅ Fetched ${exportData.projects.length} projects`);
+      }
+      
+      if (includeTasks) {
+        const res = await fetch('/api/tasks');
+        exportData.tasks = await res.json();
+        console.log(`✅ Fetched ${exportData.tasks.length} tasks`);
+      }
+      
+      if (includeAttachments) {
+        const res = await fetch('/api/attachments');
+        exportData.attachments = await res.json();
+        console.log(`✅ Fetched ${exportData.attachments.length} attachments`);
+      }
+      
+      if (includeActivity) {
+        const res = await fetch('/api/activity');
+        exportData.activity_logs = await res.json();
+        console.log(`✅ Fetched ${exportData.activity_logs.length} activity logs`);
+      }
+      
+      if (includeChat) {
+        const res = await fetch('/chat/get');
+        const chatData = await res.json();
+        exportData.chat_messages = chatData.messages || [];
+        console.log(`✅ Fetched ${exportData.chat_messages.length} chat messages`);
+      }
+      
+      // Add metadata
+      exportData.export_metadata = {
+        export_date: new Date().toISOString(),
+        format: format,
+        included_data: {
+          projects: includeProjects,
+          tasks: includeTasks,
+          attachments: includeAttachments,
+          activity_logs: includeActivity,
+          chat_messages: includeChat
+        }
+      };
+      
+      // Convert and download
+      if (format === 'json') {
+        downloadJSON(exportData);
+      } else if (format === 'csv') {
+        downloadCSV(exportData);
+      }
+      
+      // Reset button
+      confirmExportBtn.disabled = false;
+      confirmExportBtn.innerHTML = `
+        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+        </svg>
+        Export Data
+      `;
+      
+      // Close modal
+      closeExportModalFunc();
+      
+      // Show success message
+      alert('✅ Data exported successfully!');
+      
+    } catch (error) {
+      console.error('❌ Export error:', error);
+      alert('❌ Failed to export data. Please try again.');
+      
+      // Reset button
+      confirmExportBtn.disabled = false;
+      confirmExportBtn.innerHTML = `
+        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+        </svg>
+        Export Data
+      `;
+    }
+  });
+}
+
+// Download as JSON
+function downloadJSON(data) {
+  const jsonStr = JSON.stringify(data, null, 2);
+  const blob = new Blob([jsonStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `ps16_export_${new Date().toISOString().split('T')[0]}.json`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+  console.log('📥 JSON file downloaded');
+}
+
+// Download as CSV
+function downloadCSV(data) {
+  let csvContent = '';
+  
+  // Export projects
+  if (data.projects && data.projects.length > 0) {
+    csvContent += '=== PROJECTS ===\n';
+    csvContent += 'ID,Name,Description,Start Date,End Date,Status,Created At\n';
+    data.projects.forEach(p => {
+      csvContent += `${p.id},"${(p.name || '').replace(/"/g, '""')}","${(p.description || '').replace(/"/g, '""')}",${p.start_date || ''},${p.end_date || ''},${p.status || ''},${p.created_at || ''}\n`;
+    });
+    csvContent += '\n';
+  }
+  
+  // Export tasks
+  if (data.tasks && data.tasks.length > 0) {
+    csvContent += '=== TASKS ===\n';
+    csvContent += 'ID,Project ID,Title,Description,Assigned To,Status,Priority,Due Date,Created At\n';
+    data.tasks.forEach(t => {
+      csvContent += `${t.id},${t.project_id || ''},"${(t.title || '').replace(/"/g, '""')}","${(t.description || '').replace(/"/g, '""')}",${t.assigned_to || ''},${t.status || ''},${t.priority || ''},${t.due_date || ''},${t.created_at || ''}\n`;
+    });
+    csvContent += '\n';
+  }
+  
+  // Export attachments
+  if (data.attachments && data.attachments.length > 0) {
+    csvContent += '=== ATTACHMENTS ===\n';
+    csvContent += 'ID,Task ID,Filename,Uploaded By,Uploaded At\n';
+    data.attachments.forEach(a => {
+      csvContent += `${a.id},${a.task_id || ''},"${(a.filename || '').replace(/"/g, '""')}",${a.uploaded_by || ''},${a.uploaded_at || ''}\n`;
+    });
+    csvContent += '\n';
+  }
+  
+  // Export activity logs
+  if (data.activity_logs && data.activity_logs.length > 0) {
+    csvContent += '=== ACTIVITY LOGS ===\n';
+    csvContent += 'ID,Action Type,Object Type,Object ID,Timestamp\n';
+    data.activity_logs.forEach(a => {
+      csvContent += `${a.id},${a.action_type || ''},${a.object_type || ''},${a.object_id || ''},${a.timestamp || ''}\n`;
+    });
+    csvContent += '\n';
+  }
+  
+  // Export chat messages
+  if (data.chat_messages && data.chat_messages.length > 0) {
+    csvContent += '=== CHAT MESSAGES ===\n';
+    csvContent += 'ID,Name,Message,Time\n';
+    data.chat_messages.forEach(c => {
+      csvContent += `${c.id},"${(c.name || '').replace(/"/g, '""')}","${(c.message || '').replace(/"/g, '""')}",${c.time || ''}\n`;
+    });
+  }
+  
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `ps16_export_${new Date().toISOString().split('T')[0]}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+  console.log('📥 CSV file downloaded');
+}
+
+console.log('✅ Export functionality initialized');
+
+// ============================================
+// ALERTS FUNCTIONALITY
+// ============================================
+
+async function loadAlerts() {
+  console.log('🔔 Loading alerts...');
+  const alertsList = document.getElementById('alerts-list');
+  
+  if (!alertsList) return;
+  
+  try {
+    // Fetch tasks and projects to generate alerts
+    const tasksRes = await fetch('/api/tasks');
+    const tasks = await tasksRes.json();
+    
+    const projectsRes = await fetch('/api/projects');
+    const projects = await projectsRes.json();
+    
+    // Generate alerts
+    const alerts = [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Check for overdue tasks
+    tasks.forEach(task => {
+      if (task.due_date && task.status !== 'done') {
+        const dueDate = new Date(task.due_date);
+        const diffTime = dueDate - today;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        if (diffDays < 0) {
+          alerts.push({
+            type: 'error',
+            icon: '🔴',
+            title: 'Overdue Task',
+            message: `"${task.title}" is ${Math.abs(diffDays)} day(s) overdue`,
+            time: task.due_date,
+            priority: 'high'
+          });
+        } else if (diffDays <= 3) {
+          alerts.push({
+            type: 'warning',
+            icon: '⚠️',
+            title: 'Task Due Soon',
+            message: `"${task.title}" is due in ${diffDays} day(s)`,
+            time: task.due_date,
+            priority: 'medium'
+          });
+        }
+      }
+    });
+    
+    // Check for high priority tasks
+    tasks.forEach(task => {
+      if (task.priority === 1 && task.status !== 'done') {
+        alerts.push({
+          type: 'info',
+          icon: '🔥',
+          title: 'Urgent Priority Task',
+          message: `"${task.title}" requires immediate attention`,
+          time: new Date().toISOString(),
+          priority: 'high'
+        });
+      }
+    });
+    
+    // Sort alerts by priority and time
+    alerts.sort((a, b) => {
+      const priorityOrder = { high: 0, medium: 1, low: 2 };
+      return priorityOrder[a.priority] - priorityOrder[b.priority];
+    });
+    
+    // Render alerts
+    if (alerts.length === 0) {
+      alertsList.innerHTML = `
+        <div class="empty-state">
+          <svg width="64" height="64" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin: 0 auto 16px; opacity: 0.3;">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+          </svg>
+          <p>No alerts at the moment</p>
+          <small style="color: #999;">You'll be notified about important updates here</small>
+        </div>
+      `;
+    } else {
+      alertsList.innerHTML = alerts.map(alert => `
+        <div class="alert-item alert-${alert.type}">
+          <div class="alert-icon">${alert.icon}</div>
+          <div class="alert-content">
+            <div class="alert-title">${alert.title}</div>
+            <div class="alert-message">${alert.message}</div>
+            <div class="alert-time">${formatAlertTime(alert.time)}</div>
+          </div>
+          <button class="alert-dismiss" onclick="dismissAlert(this)" title="Dismiss">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+      `).join('');
+    }
+    
+    console.log(`✅ Loaded ${alerts.length} alerts`);
+    
+  } catch (error) {
+    console.error('❌ Error loading alerts:', error);
+    alertsList.innerHTML = `
+      <div class="empty-state">
+        <p style="color: #ef4444;">Failed to load alerts</p>
+        <small style="color: #999;">${error.message}</small>
+      </div>
+    `;
+  }
+}
+
+function formatAlertTime(timeStr) {
+  const date = new Date(timeStr);
+  const now = new Date();
+  const diffMs = now - date;
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+  
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+  return date.toLocaleDateString();
+}
+
+// Global function to dismiss alert
+window.dismissAlert = function(button) {
+  const alertItem = button.closest('.alert-item');
+  if (alertItem) {
+    alertItem.style.animation = 'slideOut 0.3s ease-out';
+    setTimeout(() => alertItem.remove(), 300);
+  }
+};
+
+// Clear all alerts
+const clearAllAlertsBtn = document.getElementById('clear-all-alerts');
+if (clearAllAlertsBtn) {
+  clearAllAlertsBtn.addEventListener('click', () => {
+    const alertsList = document.getElementById('alerts-list');
+    if (alertsList) {
+      alertsList.innerHTML = `
+        <div class="empty-state">
+          <svg width="64" height="64" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin: 0 auto 16px; opacity: 0.3;">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+          </svg>
+          <p>No alerts at the moment</p>
+          <small style="color: #999;">You'll be notified about important updates here</small>
+        </div>
+      `;
+    }
+  });
+}
+
+// Mark all as read
+const markAllReadBtn = document.getElementById('mark-all-read');
+if (markAllReadBtn) {
+  markAllReadBtn.addEventListener('click', () => {
+    document.querySelectorAll('.alert-item').forEach(item => {
+      item.style.opacity = '0.6';
+    });
+  });
+}
+
+console.log('✅ Alerts functionality initialized');
