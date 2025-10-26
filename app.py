@@ -12,6 +12,8 @@ from werkzeug.utils import secure_filename
 from config import get_db_connection, db, log_activity, ActivityLog, Chat
 import logging
 import requests
+import psycopg2
+import psycopg2.extras
 
 
 app = Flask(__name__)
