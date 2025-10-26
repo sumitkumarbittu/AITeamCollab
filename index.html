@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PS16 - Collaborative Workspace</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
+  <!-- Cytoscape.js CSS -->
+  <script src="https://unpkg.com/cytoscape@3.23.0/dist/cytoscape.min.js"></script>
+</head>
+<body>
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="logo">
+      <h1>PS16</h1>
+      <p>Collaborative Workspace</p>
+    </div>
+    <div class="nav-menu">
+      <!---AI Suggestion--->
+
+      <div class="nav-item" data-view="graph">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-6a2 2 0 012-2h6"/>
+        </svg>
+        Graph
+      </div>
+
+      <div class="nav-item active" data-view="projects">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+        </svg>
+        Projects
+      </div>
+      <div class="nav-item" data-view="tasks">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+        </svg>
+        Tasks
+      </div>
+      <div class="nav-item" data-view="attachments">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+        </svg>
+        Attachments
+      </div>
+      <div class="nav-item" data-view="calendar">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M8 7V3h8v4M3 11h18M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+        </svg>
+        Calendar
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <div class="header">
+      <h2 id="view-title">Projects</h2>
+      <p id="view-subtitle">Manage your projects and track progress</p>
+    </div>
+
+    <div class="content-area" id="content-area">
+      <!-- Graph View -->
+      <section id="graph-view" class="view-section" style="display:none;">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Graph Controls</h3>
+          </div>
+          <div class="form-grid">
+            <label for="layoutSelect">Layout:</label>
+            <select id="layoutSelect" class="form-select">
+              <option value="breadthfirst">Hierarchical</option>
+              <option value="cose">Force-directed</option>
+              <option value="concentric">Concentric</option>
+              <option value="grid">Grid</option>
+              <option value="circle">Circle</option>
+            </select>
+            <button id="refreshGraph" class="btn btn-secondary">Refresh</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Project & Task Graph</h3>
+          </div>
+          <div style="position: relative;">
+            <div class="graph-legend">
+              <div class="graph-legend-item">
+                <div class="graph-legend-color belongs-to"></div>
+                <span>Project → Task</span>
+              </div>
+              <div class="graph-legend-item">
+                <div class="graph-legend-color subtask"></div>
+                <span>Parent → Child Task</span>
+              </div>
+              <div class="graph-legend-item">
+                <div class="graph-legend-color depends-on"></div>
+                <span>Task Dependencies</span>
+              </div>
+            </div>
+            <div id="cy" style="width:100%; height:600px; border: 1px solid #ccc; border-radius: 8px; background: #fff;"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Projects Section -->
+      <section id="projects-view" class="view-section">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Create New Project</h3>
+          </div>
+          <form id="create-project-form" class="form-grid">
+            <input type="text" class="form-input" id="project-name" placeholder="Project name *" required />
+            <input type="date" class="form-input" id="project-start" placeholder="Start date" />
+            <input type="date" class="form-input" id="project-end" placeholder="End date" />
+            <textarea class="form-textarea" id="project-desc" placeholder="Project description"></textarea>
+            <button type="submit" class="btn btn-primary">
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+              </svg>
+              Create Project
+            </button>
+          </form>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">All Projects</h3>
+          </div>
+          <div class="items-list" id="projects-list">
+            <div class="empty-state">
+              <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+              </svg>
+              <p>No projects yet. Create your first project above!</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tasks Section -->
+      <section id="tasks-view" class="view-section" style="display: none;">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Create New Task</h3>
+          </div>
+          <form id="create-task-form" class="form-grid">
+            <select class="form-select" id="task-project-select" required>
+              <option value="">Select Project *</option>
+            </select>
+            <input type="text" class="form-input" id="task-title" placeholder="Task title *" required />
+            <input type="text" class="form-input" id="task-assigned" placeholder="Assigned to" />
+            <input type="date" class="form-input" id="task-due" placeholder="Due date" />
+            <select class="form-select" id="task-priority">
+              <option value="1">Priority 1 — High</option>
+              <option value="2">Priority 2</option>
+              <option value="3" selected>Priority 3 — Normal</option>
+              <option value="4">Priority 4</option>
+              <option value="5">Priority 5 — Low</option>
+            </select>
+            <button type="submit" class="btn btn-primary">
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+              </svg>
+              Create Task
+            </button>
+          </form>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">All Tasks</h3>
+          </div>
+          <div class="items-list" id="tasks-list">
+            <div class="empty-state">
+              <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+              </svg>
+              <p>No tasks yet. Create your first task above!</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Attachments Section -->
+      <section id="attachments-view" class="view-section" style="display: none;">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Upload Attachment</h3>
+          </div>
+          <form id="upload-form">
+            <div class="form-grid">
+              <select class="form-select" id="upload-task-select" required>
+                <option value="">Select Task *</option>
+              </select>
+              <input type="text" class="form-input" id="upload-by" placeholder="Your name/email" />
+            </div>
+            <div class="file-upload-wrapper" onclick="document.getElementById('upload-file').click()">
+              <input type="file" id="upload-file" />
+              <label class="file-upload-label">
+                <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin: 0 auto 8px; display: block;">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                </svg>
+                Click to select file or drag and drop
+              </label>
+              <div id="file-name-display" class="file-name-display"></div>
+            </div>
+            <button type="submit" class="btn btn-primary">
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+              </svg>
+              Upload Attachment
+            </button>
+          </form>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">All Attachments</h3>
+          </div>
+          <div class="items-list" id="attachments-list">
+            <div class="empty-state">
+              <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+              </svg>
+              <p>No attachments yet. Upload your first file above!</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Calendar Section -->
+      <section id="calendar-view" class="view-section" style="display:none;">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Task Calendar</h3>
+          </div>
+          <div id="calendar-container" style="padding:20px;">
+            <div id="calendar" style="height:600px;"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Floating Activity Log Widget -->
+  <div id="activity-widget" class="draggable">
+    <div id="activity-header">
+      <span>Activity Log</span>
+      <button id="toggle-activity">_</button>
+    </div>
+    <div id="activity-body">
+      <div id="activity-content">Loading...</div>
+    </div>
+  </div>
+
+  <!-- Floating Chat Widget -->
+  <div id="chat-widget" class="draggable resizable">
+    <div id="chat-header">
+      <span>💬 Team Chat</span>
+      <button id="toggle-chat">_</button>
+    </div>
+
+    <div id="chat-body">
+      <div id="chat-box" class="chat-box"></div>
+      <form id="message-form" class="message-form">
+        <input type="text" id="name-input" placeholder="Your name" required>
+        <input type="text" id="message-input" placeholder="Type a message..." required>
+        <button type="submit">Send</button>
+      </form>
+    </div>
+
+    <!-- Resize Handle -->
+    <div id="resize-handle"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
