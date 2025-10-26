@@ -13,6 +13,7 @@ from config import get_db_connection, db, log_activity, ActivityLog, Chat
 import psycopg2
 import psycopg2.extras
 import logging
+import requests
 
 
 app = Flask(__name__)
@@ -1257,6 +1258,116 @@ Format your response as clear bullet points."""
                 "suggestions": f"⚠️ Unable to generate suggestions: {error_details}\n\nPlease check your Gemini API configuration and try again."
             }), 500
 
+
+
+# ============================================
+# SLACK ALERT INTEGRATION
+# ============================================
+
+# Slack Webhook Configuration
+# Set via environment variable: export SLACK_WEBHOOK_URL="https://hooks.slack.com/services/..."
+SLACK_WEBHOOK_URL = os.environ.get("SLACK_WEBHOOK_URL")
+
+# Fallback for local testing (remove in production)
+if not SLACK_WEBHOOK_URL:
+    SLACK_WEBHOOK_URL = "https://hooks.slack.com/services/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"
+
+@app.route('/api/send_slack_alert', methods=['POST'])
+def send_slack_alert():
+    """Send alert notification to Slack"""
+    try:
+        data = request.get_json()
+        alert_type = data.get('type', 'info')
+        title = data.get('title', 'Alert')
+        message = data.get('message', 'No message provided')
+        
+        # Determine emoji based on alert type
+        emoji_map = {
+            'error': '🔴',
+            'warning': '⚠️',
+            'info': '🔵'
+        }
+        emoji = emoji_map.get(alert_type, '🔔')
+        
+        # Construct Slack message with rich formatting
+        payload = {
+            "blocks": [
+                {
+                    "type": "header",
+                    "text": {
+                        "type": "plain_text",
+                        "text": f"{emoji} {title}",
+                        "emoji": True
+                    }
+                },
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": f"*Message:* {message}"
+                    }
+                },
+                {
+                    "type": "section",
+                    "fields": [
+                        {
+                            "type": "mrkdwn",
+                            "text": f"*Type:*\n{alert_type.upper()}"
+                        },
+                        {
+                            "type": "mrkdwn",
+                            "text": f"*Time:*\n{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+                        }
+                    ]
+                },
+                {
+                    "type": "divider"
+                },
+                {
+                    "type": "context",
+                    "elements": [
+                        {
+                            "type": "mrkdwn",
+                            "text": "📊 Sent from *PS16 Collaborative Workspace* | Project Management System"
+                        }
+                    ]
+                }
+            ]
+        }
+        
+        # Send to Slack
+        resp = requests.post(SLACK_WEBHOOK_URL, json=payload, timeout=5)
+        
+        if resp.status_code == 200:
+            # Log activity with correct parameters: user_id, action_type, object_type, object_id
+            log_activity(
+                user_id="system",
+                action_type="slack_notification",
+                object_type="alert",
+                object_id=f"{alert_type}_{datetime.now().strftime('%Y%m%d%H%M%S')}"
+            )
+            return jsonify({
+                "status": "success",
+                "message": "Alert sent to Slack successfully ✅"
+            }), 200
+        else:
+            logging.error(f"Slack webhook failed: {resp.status_code} - {resp.text}")
+            return jsonify({
+                "status": "error",
+                "message": f"Slack responded with {resp.status_code}"
+            }), resp.status_code
+            
+    except requests.exceptions.Timeout:
+        return jsonify({
+            "status": "error",
+            "message": "Request to Slack timed out"
+        }), 504
+    except Exception as e:
+        logging.error(f"Slack alert error: {str(e)}", exc_info=True)
+        return jsonify({
+            "status": "error",
+            "message": f"Failed to send alert: {str(e)}"
+        }), 500
 
 
 # --------- Run ----------

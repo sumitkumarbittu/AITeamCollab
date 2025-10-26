@@ -2153,6 +2153,80 @@
   color: #6b7280;
 }
 
+/* Alert Actions Container */
+.alert-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* Slack Button */
+.alert-slack-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #611f69 0%, #4a154b 100%);
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(74, 21, 75, 0.2);
+}
+
+.alert-slack-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #4a154b 0%, #611f69 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(74, 21, 75, 0.3);
+}
+
+.alert-slack-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(74, 21, 75, 0.2);
+}
+
+.alert-slack-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.alert-slack-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.alert-slack-btn span {
+  font-size: 0.85rem;
+}
+
+/* Notification animations */
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideOutRight {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
 @keyframes slideOut {
   from {
     opacity: 1;
@@ -2161,6 +2235,15 @@
   to {
     opacity: 0;
     transform: translateX(100%);
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
   }
 }
 

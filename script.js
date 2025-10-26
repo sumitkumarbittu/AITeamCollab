@@ -3280,21 +3280,32 @@ async function loadAlerts() {
         </div>
       `;
     } else {
-      alertsList.innerHTML = alerts.map(alert => `
-        <div class="alert-item alert-${alert.type}">
+      alertsList.innerHTML = alerts.map((alert, index) => `
+        <div class="alert-item alert-${alert.type}" data-alert-index="${index}">
           <div class="alert-icon">${alert.icon}</div>
           <div class="alert-content">
             <div class="alert-title">${alert.title}</div>
             <div class="alert-message">${alert.message}</div>
             <div class="alert-time">${formatAlertTime(alert.time)}</div>
           </div>
-          <button class="alert-dismiss" onclick="dismissAlert(this)" title="Dismiss">
-            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-            </svg>
-          </button>
+          <div class="alert-actions">
+            <button class="alert-slack-btn" onclick="sendAlertToSlack(${index})" title="Send to Slack">
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/>
+              </svg>
+              <span>Slack</span>
+            </button>
+            <button class="alert-dismiss" onclick="dismissAlert(this)" title="Dismiss">
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
         </div>
       `).join('');
+      
+      // Store alerts globally for Slack sending
+      window.currentAlerts = alerts;
     }
     
     console.log(`✅ Loaded ${alerts.length} alerts`);
@@ -3361,6 +3372,118 @@ if (markAllReadBtn) {
       item.style.opacity = '0.6';
     });
   });
+}
+
+// Send alert to Slack
+window.sendAlertToSlack = async function(alertIndex) {
+  if (!window.currentAlerts || !window.currentAlerts[alertIndex]) {
+    console.error('Alert not found');
+    return;
+  }
+  
+  const alert = window.currentAlerts[alertIndex];
+  const alertItem = document.querySelector(`[data-alert-index="${alertIndex}"]`);
+  const slackBtn = alertItem?.querySelector('.alert-slack-btn');
+  
+  if (slackBtn) {
+    // Show loading state
+    const originalHTML = slackBtn.innerHTML;
+    slackBtn.disabled = true;
+    slackBtn.innerHTML = `
+      <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="animation: spin 1s linear infinite;">
+        <circle cx="12" cy="12" r="10" stroke-width="4" stroke="currentColor" fill="none" opacity="0.25"/>
+        <path d="M4 12a8 8 0 018-8" stroke-width="4" stroke="currentColor" fill="none" stroke-linecap="round"/>
+      </svg>
+      <span>Sending...</span>
+    `;
+    
+    try {
+      const response = await fetch('/api/send_slack_alert', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: alert.type,
+          title: alert.title,
+          message: alert.message
+        })
+      });
+      
+      const result = await response.json();
+      
+      if (result.status === 'success') {
+        // Show success state
+        slackBtn.innerHTML = `
+          <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+          </svg>
+          <span>Sent!</span>
+        `;
+        slackBtn.style.background = '#10b981';
+        
+        // Show success notification
+        showNotification('✅ Alert sent to Slack successfully!', 'success');
+        
+        // Reset button after 3 seconds
+        setTimeout(() => {
+          slackBtn.innerHTML = originalHTML;
+          slackBtn.disabled = false;
+          slackBtn.style.background = '';
+        }, 3000);
+        
+      } else {
+        throw new Error(result.message || 'Failed to send alert');
+      }
+      
+    } catch (error) {
+      console.error('❌ Slack alert error:', error);
+      
+      // Show error state
+      slackBtn.innerHTML = `
+        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+        <span>Failed</span>
+      `;
+      slackBtn.style.background = '#ef4444';
+      
+      // Show error notification
+      showNotification(`❌ Failed to send: ${error.message}`, 'error');
+      
+      // Reset button after 3 seconds
+      setTimeout(() => {
+        slackBtn.innerHTML = originalHTML;
+        slackBtn.disabled = false;
+        slackBtn.style.background = '';
+      }, 3000);
+    }
+  }
+};
+
+// Helper function to show notifications
+function showNotification(message, type = 'info') {
+  const notification = document.createElement('div');
+  notification.className = `slack-notification slack-notification-${type}`;
+  notification.textContent = message;
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 16px 24px;
+    background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+    color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 10000;
+    animation: slideInRight 0.3s ease-out;
+    font-weight: 500;
+  `;
+  
+  document.body.appendChild(notification);
+  
+  setTimeout(() => {
+    notification.style.animation = 'slideOutRight 0.3s ease-out';
+    setTimeout(() => notification.remove(), 300);
+  }, 3000);
 }
 
 console.log('✅ Alerts functionality initialized');
