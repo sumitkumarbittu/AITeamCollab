@@ -10,8 +10,6 @@ from datetime import datetime
 from flask import Flask, request, jsonify, send_file, send_from_directory
 from werkzeug.utils import secure_filename
 from config import get_db_connection, db, log_activity, ActivityLog, Chat
-import psycopg2
-import psycopg2.extras
 import logging
 import requests
 

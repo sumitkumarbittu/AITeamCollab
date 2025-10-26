@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: aiteamcollab
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python3 app.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13
+      - key: DATABASE_URL
+        fromService:
+          type: pserv
+          name: aiteamcollab-db
+          property: connectionString
+
+databases:
+  - name: aiteamcollab-db
+    databaseName: aiteamcollab
+    user: aiteamcollab_user
+    plan: starter
