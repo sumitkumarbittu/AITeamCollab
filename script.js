@@ -33,6 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function getViewSubtitle(view) {
   const subtitles = {
+    'ai-suggestions': 'Get AI-powered suggestions for your tasks',
     calendar: 'View and manage task deadlines',
     graph: 'Visual project and task relationships',
     projects: 'Manage your projects and track progress',
@@ -44,6 +45,9 @@ function getViewSubtitle(view) {
 
 async function loadViewData(view) {
   switch(view) {
+    case 'ai-suggestions':
+      await loadAISuggestions();
+      break;
     case 'calendar':
       await loadCalendar();
       break;
@@ -1039,4 +1043,188 @@ async function loadCalendar() {
   }
 }
 
+// ============================================
+// AI SUGGESTIONS FUNCTIONALITY
+// ============================================
+
+let allAITasks = [];
+
+// Load AI Suggestions view
+async function loadAISuggestions() {
+  try {
+    const res = await fetch('/api/tasks');
+    allAITasks = await res.json();
+    
+    // Normalize statuses
+    allAITasks = allAITasks.map(t => {
+      let normalized = (t.status || 'todo').toLowerCase();
+      if (normalized === 'done') normalized = 'done';
+      else if (normalized === 'in-progress') normalized = 'in_progress';
+      return { ...t, status: normalized };
+    });
+    
+    renderAITasks(allAITasks);
+    setupAIFilters();
+  } catch (error) {
+    console.error('Error loading AI suggestions:', error);
+    document.getElementById('taskListAI').innerHTML = '<p style="color: red;">Error loading tasks</p>';
+  }
+}
+
+// Setup filter buttons
+function setupAIFilters() {
+  const filterButtons = document.querySelectorAll('.filter-btn');
+  const refreshBtn = document.getElementById('refreshAIBtn');
+  
+  filterButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      filterButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      applyAIFilter(btn.dataset.filter);
+    });
+  });
+  
+  if (refreshBtn) {
+    refreshBtn.addEventListener('click', loadAISuggestions);
+  }
+}
+
+// Apply filter to tasks
+function applyAIFilter(status) {
+  let filtered = [];
+  if (status === 'all') {
+    filtered = allAITasks;
+  } else {
+    filtered = allAITasks.filter(t => t.status === status);
+  }
+  renderAITasks(filtered);
+}
+
+// Render tasks in AI view
+function renderAITasks(tasks) {
+  const taskList = document.getElementById('taskListAI');
+  taskList.innerHTML = '';
+  
+  if (!tasks.length) {
+    taskList.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No tasks found.</p>';
+    return;
+  }
+  
+  tasks.forEach(task => {
+    const taskBtn = document.createElement('button');
+    taskBtn.className = 'task-btn-ai';
+    taskBtn.style.cssText = 'display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 12px 15px; margin: 8px 0; background: #f0f4ff; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem; text-align: left; transition: background 0.2s;';
+    taskBtn.innerHTML = `
+      <span>📋 ${task.title}</span>
+      <span style="font-size:0.9rem; color:#555;">${task.status}</span>
+    `;
+    taskBtn.onmouseover = function() { this.style.background = '#dce3fc'; };
+    taskBtn.onmouseout = function() { this.style.background = '#f0f4ff'; };
+    taskBtn.onclick = () => showTaskAISuggestions(task.id);
+    taskList.appendChild(taskBtn);
+    
+    const suggestionBox = document.createElement('div');
+    suggestionBox.id = `suggestion-${task.id}`;
+    suggestionBox.className = 'suggestion-box-ai';
+    suggestionBox.style.cssText = 'background: #FFF8B0; border-left: 6px solid #c5b002; border-radius: 10px; padding: 15px; margin-top: 10px; white-space: pre-wrap; display: none; color: #3a3000; font-size: 0.95rem;';
+    taskList.appendChild(suggestionBox);
+  });
+}
+
+// Show AI suggestions for a specific task
+async function showTaskAISuggestions(taskId) {
+  const box = document.getElementById(`suggestion-${taskId}`);
+  
+  // Toggle open/close
+  if (box.style.display === 'block') {
+    box.style.display = 'none';
+    return;
+  }
+  
+  box.style.display = 'block';
+  box.innerHTML = `
+    <div style="text-align: center; padding: 20px;">
+      <div class="ai-loading-spinner"></div>
+      <p style="font-style: italic; color: #555; margin-top: 10px;">🤖 AI analyzing your task...</p>
+    </div>
+  `;
+  
+  try {
+    const res = await fetch(`/api/ai/suggestions/${taskId}`);
+    const data = await res.json();
+    
+    // Handle errors
+    if (data.error) {
+      box.innerHTML = `
+        <div class="ai-error">
+          <strong>⚠️ ${data.error}</strong>
+          <p style="margin-top: 10px;">${data.suggestions || 'Please try again later.'}</p>
+        </div>
+      `;
+      return;
+    }
+    
+    // Get urgency badge color
+    const urgencyColors = {
+      '🔴 OVERDUE': '#ff4444',
+      '⚠️ DUE SOON': '#ff9800',
+      '⚠️ URGENT': '#ff5722',
+      'Standard': '#4CAF50'
+    };
+    const urgencyColor = urgencyColors[data.urgency] || '#4CAF50';
+    
+    // Format timestamp
+    const timestamp = data.generated_at ? new Date(data.generated_at).toLocaleString() : '';
+    
+    // Build enhanced display
+    box.innerHTML = `
+      <div class="ai-suggestion-header">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+          <div>
+            <span class="ai-badge" style="background: ${urgencyColor};">${data.urgency || data.status}</span>
+            <span style="font-size: 0.85em; color: #666; margin-left: 10px;">✨ AI Generated</span>
+          </div>
+          ${timestamp ? `<span style="font-size: 0.75em; color: #999;">${timestamp}</span>` : ''}
+        </div>
+      </div>
+      
+      <div class="ai-suggestion-content">
+        <strong style="color: #2c3e50; font-size: 1.1em;">🧠 Strategic Insights:</strong>
+        <div style="margin-top: 15px; line-height: 1.8;">
+          ${formatAISuggestions(data.suggestions)}
+        </div>
+      </div>
+      
+      <div class="ai-suggestion-footer">
+        <small style="color: #999;">💡 These suggestions are AI-generated. Use your judgment for implementation.</small>
+      </div>
+    `;
+  } catch (err) {
+    box.innerHTML = `
+      <div class="ai-error">
+        <strong>❌ Connection Error</strong>
+        <p style="margin-top: 10px;">${err.message}</p>
+        <button onclick="showTaskAISuggestions(${taskId})" style="margin-top: 10px; padding: 8px 16px; background: #4b6cb7; color: white; border: none; border-radius: 6px; cursor: pointer;">
+          🔄 Try Again
+        </button>
+      </div>
+    `;
+  }
+}
+
+// Format AI suggestions with better styling
+function formatAISuggestions(text) {
+  if (!text) return '<p style="color: #999;">No suggestions available.</p>';
+  
+  // Convert markdown-style formatting
+  let formatted = text
+    .replace(/\*\*(.*?)\*\*/g, '<strong style="color: #2c3e50;">$1</strong>') // Bold
+    .replace(/\*(.*?)\*/g, '<em>$1</em>') // Italic
+    .replace(/^(\d+\.\s)/gm, '<br><strong style="color: #4b6cb7;">$1</strong>') // Numbered lists
+    .replace(/^[-•]\s/gm, '<br>• ') // Bullet points
+    .replace(/\n\n/g, '<br><br>') // Paragraphs
+    .replace(/\n/g, '<br>'); // Line breaks
+  
+  return formatted;
+}
 

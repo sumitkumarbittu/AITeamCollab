@@ -17,7 +17,12 @@
       <p>Collaborative Workspace</p>
     </div>
     <div class="nav-menu">
-      <!---AI Suggestion--->
+      <div class="nav-item" data-view="ai-suggestions">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+        </svg>
+        AI Suggestions
+      </div>
 
       <div class="nav-item" data-view="graph">
         <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -63,6 +68,83 @@
     </div>
 
     <div class="content-area" id="content-area">
+      <!-- AI Suggestions View -->
+      <section id="ai-suggestions-view" class="view-section" style="display:none;">
+        <!-- Info Banner -->
+        <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; margin-bottom: 20px;">
+          <div style="padding: 20px;">
+            <h3 style="margin: 0 0 10px 0; display: flex; align-items: center; gap: 10px;">
+              <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="flex-shrink: 0;">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+              </svg>
+              AI-Powered Task Intelligence
+            </h3>
+            <p style="margin: 0; opacity: 0.95; font-size: 0.95rem;">
+              Get strategic insights, risk analysis, and actionable recommendations for your tasks powered by Google Gemini AI
+            </p>
+          </div>
+        </div>
+
+        <!-- Main AI Suggestions Card -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">🧠 Task Suggestions</h3>
+            <button class="btn btn-secondary" id="refreshAIBtn">
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display: inline-block; vertical-align: middle; margin-right: 5px;">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+              </svg>
+              Refresh Tasks
+            </button>
+          </div>
+
+          <!-- Filter Buttons -->
+          <div style="margin: 15px 0; display: flex; gap: 10px; flex-wrap: wrap; padding: 0 5px;">
+            <button class="filter-btn active" data-filter="all">
+              <span>📊</span> All Tasks
+            </button>
+            <button class="filter-btn" data-filter="todo">
+              <span>📝</span> To-Do
+            </button>
+            <button class="filter-btn" data-filter="in_progress">
+              <span>🔄</span> In Progress
+            </button>
+            <button class="filter-btn" data-filter="done">
+              <span>✅</span> Completed
+            </button>
+            <button class="filter-btn" data-filter="overdue">
+              <span>⚠️</span> Overdue
+            </button>
+          </div>
+
+          <!-- Task List Container -->
+          <div id="taskListAI" style="margin-top: 15px;">
+            <div class="empty-state">
+              <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+              </svg>
+              <p>🤖 Loading tasks for AI analysis...</p>
+              <small style="color: #999; margin-top: 10px; display: block;">Click any task to get intelligent suggestions</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Help Card -->
+        <div class="card" style="background: #f8f9fa; border-left: 4px solid #4b6cb7; margin-top: 20px;">
+          <div style="padding: 15px;">
+            <h4 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 1rem;">
+              💡 How to Use AI Suggestions
+            </h4>
+            <ul style="margin: 0; padding-left: 20px; color: #666; font-size: 0.9rem; line-height: 1.8;">
+              <li><strong>Click any task</strong> to generate AI-powered insights</li>
+              <li>Get <strong>6 strategic perspectives</strong>: Next actions, risks, tips, collaboration, time management, and success criteria</li>
+              <li>Use <strong>filters</strong> to focus on specific task statuses</li>
+              <li>AI considers <strong>priority, deadlines, and urgency</strong> automatically</li>
+              <li>Click the task again to <strong>close suggestions</strong></li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
       <!-- Graph View -->
       <section id="graph-view" class="view-section" style="display:none;">
         <div class="card">

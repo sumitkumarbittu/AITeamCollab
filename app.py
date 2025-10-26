@@ -12,6 +12,7 @@ from werkzeug.utils import secure_filename
 from config import get_db_connection, db, log_activity, ActivityLog, Chat
 import psycopg2
 import psycopg2.extras
+import logging
 
 
 app = Flask(__name__)
@@ -736,30 +737,119 @@ def get_gemini_tasks():
 
 @app.route('/api/ai/suggestions/<int:task_id>')
 def ai_task_suggestions(task_id):
+    """Generate intelligent AI suggestions for a specific task using Google Gemini"""
     task = Task.query.get(task_id)
     if not task:
         return jsonify({"error": "Task not found"}), 404
 
-    prompt = f"""
-You are a concise project assistant AI.
-Task details:
-Title: {task.title}
-Description: {task.description or 'No description'}
-Status: {task.status}
-Assigned To: {task.assigned_to or 'Unassigned'}
-Priority: {task.priority}
-Due Date: {task.due_date or 'N/A'}
+    # Determine urgency
+    urgency = "⚠️ URGENT" if task.priority <= 2 else "Standard"
+    if task.due_date:
+        from datetime import datetime
+        days_until_due = (task.due_date - datetime.utcnow().date()).days
+        if days_until_due < 0:
+            urgency = "🔴 OVERDUE"
+        elif days_until_due <= 3:
+            urgency = "⚠️ DUE SOON"
+    
+    # Build enhanced prompt
+    prompt = f"""You are an expert project management AI assistant. Analyze this task and provide strategic, actionable insights.
 
-Provide short high-impact suggestions (max 5 bullet points).
-"""
+📋 TASK ANALYSIS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📌 Title: {task.title}
+📝 Description: {task.description or 'No detailed description provided'}
+🎯 Current Status: {task.status.upper()}
+👤 Assigned To: {task.assigned_to or 'Unassigned - needs assignment'}
+⭐ Priority Level: {task.priority}/5 ({urgency})
+📅 Due Date: {task.due_date or 'No deadline set'}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🤖 YOUR MISSION:
+Provide 4-6 concise, high-impact suggestions covering:
+
+1. **🎯 Next Actions**: Immediate concrete steps to move this task forward
+2. **⚠️ Potential Risks**: What could go wrong or block progress?
+3. **💡 Smart Tips**: Best practices or efficiency improvements
+4. **👥 Collaboration**: Who should be involved or consulted?
+5. **⏰ Time Management**: How to prioritize or break down the work
+6. **✅ Success Criteria**: How to know when this task is truly complete
+
+Keep each point brief (1-2 lines max). Be specific and actionable. Use emojis for visual clarity.
+
+Format your response as clear bullet points."""
+
     try:
-        model = genai.GenerativeModel("models/gemini-2.5-pro")
-        response = model.generate_content(prompt)
-        suggestion = getattr(response, "text", "No suggestions returned")
-        return jsonify({"task_id": task.id, "title": task.title, "suggestions": suggestion.strip()})
+        from google import genai
+        
+        # Validate API key
+        api_key = os.getenv('GEMINI_API_KEY')
+        if not api_key:
+            logging.error("GEMINI_API_KEY not found in environment variables")
+            return jsonify({
+                "error": "AI service not configured",
+                "suggestions": "⚠️ Unable to generate AI suggestions. Please contact your administrator."
+            }), 500
+        
+        # Initialize Gemini client
+        client = genai.Client(api_key=api_key)
+        
+        # Generate AI suggestions
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt
+        )
+        
+        # Process response
+        suggestions_text = response.text.strip()
+        
+        # Add fallback if response is empty
+        if not suggestions_text:
+            suggestions_text = "✨ AI is analyzing your task. Please try again in a moment."
+        
+        return jsonify({
+            "task_id": task.id,
+            "title": task.title,
+            "status": task.status,
+            "urgency": urgency,
+            "suggestions": suggestions_text,
+            "generated_at": datetime.utcnow().isoformat()
+        })
+        
+    except ImportError as e:
+        logging.error(f"Failed to import Google Genai SDK: {str(e)}")
+        return jsonify({
+            "error": "AI module not installed",
+            "suggestions": "⚠️ AI suggestions feature requires additional setup. Install google-genai package."
+        }), 500
+        
+    except AttributeError as e:
+        logging.error(f"API response format error: {str(e)}")
+        return jsonify({
+            "error": "Unexpected API response format",
+            "suggestions": "⚠️ Unable to parse AI response. Please try again."
+        }), 500
+        
     except Exception as e:
-        logging.error("Gemini API error", exc_info=True)
-        return jsonify({"error": str(e)}), 500
+        error_details = str(e)
+        logging.error(f"Gemini API error: {error_details}", exc_info=True)
+        
+        # Provide helpful error messages
+        if "API key" in error_details.lower():
+            return jsonify({
+                "error": "Invalid API key",
+                "suggestions": "⚠️ AI service authentication failed. Please check API configuration."
+            }), 500
+        elif "quota" in error_details.lower():
+            return jsonify({
+                "error": "API quota exceeded",
+                "suggestions": "⚠️ AI service temporarily unavailable due to usage limits. Try again later."
+            }), 503
+        else:
+            return jsonify({
+                "error": f"AI generation failed: {error_details}",
+                "suggestions": "⚠️ Unable to generate suggestions at this time. Please try again."
+            }), 500
 
 
 
