@@ -58,6 +58,7 @@ async function loadViewData(view) {
       break;
     case 'attachments':
       await loadTasksForSelect();
+      await loadAttachments();
       break;
   }
 }
@@ -292,7 +293,7 @@ document.getElementById('upload-form').addEventListener('submit', async (e) => {
       alert('✅ Upload successful!');
       e.target.reset();
       document.getElementById('file-name-display').textContent = '';
-      loadAttachments();
+      loadAttachments(); // Refresh the all attachments view
       // Refresh activity widget immediately (if available)
       if (typeof window !== 'undefined' && window.refreshActivityWidget) {
         window.refreshActivityWidget();
@@ -306,18 +307,11 @@ document.getElementById('upload-form').addEventListener('submit', async (e) => {
   }
 });
 
-// Load attachments for current task
+// Load all attachments (not filtered by task)
 async function loadAttachments() {
-  const taskSelect = document.getElementById('upload-task-select');
-  const taskId = taskSelect.value;
-
-  if (!taskId) {
-    document.getElementById('attachments-list').innerHTML = `<div class="empty-state"><p>Select a task to view attachments.</p></div>`;
-    return;
-  }
-
   try {
-    const res = await fetch(`/api/tasks/${taskId}/attachments`);
+    // Fetch all attachments with task and project info
+    const res = await fetch('/api/attachments');
     const data = await res.json();
     const list = document.getElementById('attachments-list');
     list.innerHTML = '';
@@ -338,7 +332,7 @@ async function loadAttachments() {
             <button class="btn btn-sm btn-danger" onclick="deleteAttachment(${att.id})">Delete</button>
           </div>
         </div>
-        <div class="item-meta">Uploaded by: ${att.uploaded_by || '—'} | At: ${new Date(att.uploaded_at).toLocaleString()}</div>
+        <div class="item-meta">Project: ${att.project_name || 'Unknown Project'} | Task: ${att.task_title || 'Unknown Task'} | Uploaded by: ${att.uploaded_by || '—'} | At: ${new Date(att.uploaded_at).toLocaleString()}</div>
       `;
       list.appendChild(div);
     });
@@ -352,7 +346,7 @@ async function deleteAttachment(id) {
   if (!confirm('Delete this attachment?')) return;
   try {
     await fetch(`/api/attachments/${id}`, { method: 'DELETE' });
-    loadAttachments();
+    loadAttachments(); // Refresh the all attachments view
     // Refresh activity widget immediately (if available)
     if (typeof window !== 'undefined' && window.refreshActivityWidget) {
       window.refreshActivityWidget();
@@ -364,8 +358,6 @@ async function deleteAttachment(id) {
   }
 }
 
-// When task dropdown changes, reload attachments
-document.getElementById('upload-task-select').addEventListener('change', loadAttachments);
 
 
 
@@ -925,6 +917,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (typeof loadTasks === 'function') loadTasks();
       } else if (view === 'attachments') {
         if (typeof loadTasksForSelect === 'function') loadTasksForSelect();
+        if (typeof loadAttachments === 'function') loadAttachments();
       }
     });
   });

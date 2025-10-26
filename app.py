@@ -449,8 +449,18 @@ def delete_attachment(attachment_id):
 def list_all_attachments():
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("SELECT id, task_id, filename, uploaded_at, uploaded_by FROM attachments ORDER BY uploaded_at DESC;")
-    items = [dict(r) for r in cur.fetchall()]
+    cur.execute("""
+        SELECT
+            a.id, a.task_id, a.filename, a.uploaded_at, a.uploaded_by, a.content_type,
+            t.title as task_title, t.project_id,
+            p.name as project_name
+        FROM attachments a
+        LEFT JOIN tasks t ON a.task_id = t.id
+        LEFT JOIN projects p ON t.project_id = p.id
+        ORDER BY a.uploaded_at DESC;
+    """)
+    rows = cur.fetchall()
+    items = [dict(r) for r in rows]
     cur.close()
     conn.close()
     return jsonify(items)
