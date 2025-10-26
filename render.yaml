@@ -2,11 +2,11 @@ services:
   - type: web
     name: aiteamcollab
     env: python
-    buildCommand: pip install -r requirements.txt
+    buildCommand: apt-get update && apt-get install -y libpq-dev && pip install -r requirements.txt
     startCommand: python3 app.py
     envVars:
       - key: PYTHON_VERSION
-        value: 3.13
+        value: 3.12
       - key: DATABASE_URL
         fromService:
           type: pserv
