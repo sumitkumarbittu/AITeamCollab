@@ -4,9 +4,8 @@ Werkzeug==2.3.7
 
 # Database Dependencies
 Flask-SQLAlchemy==3.0.5
-# Using psycopg2 (without -binary) for Python 3.13 compatibility
-# This compiles from source and works with any Python version
-psycopg2==2.9.9
+# Using psycopg2-binary for better Python 3.13 compatibility
+psycopg2-binary>=2.9.9
 
 # Environment and Configuration
 python-dotenv==1.0.0
