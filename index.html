@@ -31,6 +31,20 @@
         Graph
       </div>
 
+      <div class="nav-item" data-view="ideas">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+        </svg>
+        Ideas
+      </div>
+
+      <div class="nav-item" data-view="events">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+        </svg>
+        Events
+      </div>
+
       <div class="nav-item active" data-view="projects">
         <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
@@ -629,6 +643,323 @@
             <div id="calendarLoading" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.9); z-index: 1000; align-items: center; justify-content: center; flex-direction: column;">
               <div class="loading-spinner" style="width: 50px; height: 50px; border: 4px solid #f3f3f3; border-top: 4px solid #667eea; border-radius: 50%; animation: spin 1s linear infinite;"></div>
               <p style="margin-top: 16px; color: #667eea; font-weight: 600;">Loading calendar...</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================
+           EVENTS SECTION
+           ============================================
+           This section contains the Events management interface with:
+           1. Event Creation Form - All fields for creating new events
+           2. Events List - Display of all created events with edit/delete actions
+           
+           Initial state: Hidden (display:none)
+           Shown when: User clicks "Events" in sidebar navigation
+           ============================================ -->
+      <section id="events-view" class="view-section" style="display:none;">
+        
+        <!-- ========================================
+             CREATE EVENT FORM CARD
+             ========================================
+             Purpose: Single form for both creating new events AND editing existing ones
+             - Initially in "create" mode
+             - Switches to "update" mode when edit button clicked on any event
+             - Form fields match database schema exactly
+             ======================================== -->
+        <div class="card">
+          <div class="card-header">
+            <h3>📅 Create New Event</h3>
+          </div>
+          <div class="card-body">
+            <!-- Form with ID for JavaScript event listener
+                 class="event-form" for styling -->
+            <form id="event-form" class="event-form">
+              <!-- Form Grid: Responsive layout that adapts to screen size
+                   Desktop: Multiple columns
+                   Mobile: Single column -->
+              <div class="form-grid">
+                <!-- ========================================
+                     REQUIRED FIELD: Event Name
+                     - Must be filled out (required attribute)
+                     - Backend validation also enforces this
+                     - Primary identifier for the event
+                     ======================================== -->
+                <div class="form-group">
+                  <label for="event-name">Event Name *</label>
+                  <input type="text" id="event-name" required placeholder="Enter event name">
+                </div>
+
+                <!-- ========================================
+                     OPTIONAL FIELD: Organisation
+                     - Name of organizing body/company
+                     - Example: "Google", "Microsoft", "IEEE"
+                     ======================================== -->
+                <div class="form-group">
+                  <label for="event-organisation">Organisation</label>
+                  <input type="text" id="event-organisation" placeholder="Enter organisation (optional)">
+                </div>
+
+                <!-- ========================================
+                     OPTIONAL FIELD: Platform
+                     - Where the event is hosted
+                     - Example: "HackerRank", "Devfolio", "Zoom"
+                     ======================================== -->
+                <div class="form-group">
+                  <label for="event-platform">Platform</label>
+                  <input type="text" id="event-platform" placeholder="Enter platform (optional)">
+                </div>
+
+                <!-- ========================================
+                     OPTIONAL FIELD: Team Size
+                     - Maximum number of members per team
+                     - type="number" ensures numeric input
+                     - min="1" prevents zero or negative values
+                     ======================================== -->
+                <div class="form-group">
+                  <label for="event-team-size">Team Size</label>
+                  <input type="number" id="event-team-size" min="1" placeholder="Enter team size (optional)">
+                </div>
+
+                <!-- ========================================
+                     OPTIONAL FIELD: Team Slots Available
+                     - How many team slots are still open
+                     - min="0" allows zero (no slots left)
+                     ======================================== -->
+                <div class="form-group">
+                  <label for="event-slots">Team Slots Available</label>
+                  <input type="number" id="event-slots" min="0" placeholder="Enter slots available (optional)">
+                </div>
+
+                <!-- ========================================
+                     REQUIRED FIELD: Added By
+                     - Name of person creating this event entry
+                     - Used for accountability/tracking
+                     ======================================== -->
+                <div class="form-group">
+                  <label for="event-added-by">Added By *</label>
+                  <input type="text" id="event-added-by" required placeholder="Enter your name">
+                </div>
+
+                <!-- ========================================
+                     REQUIRED FIELD: Event Date
+                     - When the event takes place
+                     - type="date" provides calendar picker
+                     - Stores in YYYY-MM-DD format
+                     ======================================== -->
+                <div class="form-group">
+                  <label for="event-date">Event Date *</label>
+                  <input type="date" id="event-date" required>
+                </div>
+
+                <!-- ========================================
+                     OPTIONAL FIELD: Team Member Names
+                     - Comma-separated list of names
+                     - full-width class spans all grid columns
+                     - Example helper text provided
+                     ======================================== -->
+                <div class="form-group full-width">
+                  <label for="event-members">Team Member Names</label>
+                  <input type="text" id="event-members" placeholder="Enter names separated by commas (optional)">
+                  <small style="color: #6b7280; margin-top: 4px; display: block;">Example: John Doe, Jane Smith, Mike Johnson</small>
+                </div>
+              </div>
+
+              <!-- ========================================
+                   FORM ACTION BUTTONS
+                   ========================================
+                   Two buttons with different behaviors:
+                   1. Submit button (Create/Update)
+                   2. Cancel button (Reset form)
+                   ======================================== -->
+              <div class="form-actions">
+                <!-- PRIMARY SUBMIT BUTTON
+                     - type="submit" triggers form submission
+                     - Text changes dynamically:
+                       * "Create Event" in create mode
+                       * "Update Event" in edit mode
+                     - Shows loading spinner during API call
+                     - ID used by JavaScript for event handling -->
+                <button type="submit" class="btn btn-primary" id="create-event-btn">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right: 8px;">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                  </svg>
+                  Create Event
+                </button>
+                
+                <!-- CANCEL BUTTON
+                     - type="button" prevents form submission
+                     - Clears all form fields
+                     - Exits edit mode if currently editing
+                     - Returns button text to "Create Event" -->
+                <button type="button" class="btn btn-secondary" id="cancel-event-btn">
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- ========================================
+             EVENTS LIST CARD
+             ========================================
+             Displays all created events in card format
+             - Initially shows empty state
+             - Populated dynamically by JavaScript
+             - Each event card has edit/delete buttons
+             ======================================== -->
+        <div class="card" style="margin-top: 24px;">
+          <div class="card-header">
+            <h3>📋 All Events</h3>
+            
+            <!-- HEADER ACTIONS
+                 Refresh button to manually reload events -->
+            <div class="header-actions">
+              <button class="btn btn-secondary" id="refresh-events-btn">
+                <!-- Refresh icon (circular arrow) -->
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+                Refresh
+              </button>
+            </div>
+          </div>
+          
+          <div class="card-body">
+            <!-- EVENTS CONTAINER
+                 This div's content is completely replaced by JavaScript
+                 Initial content: Empty state message
+                 After loading: Event cards OR empty state if no events -->
+            <div id="events-list">
+              <!-- ========================================
+                   INITIAL EMPTY STATE
+                   ========================================
+                   Shown when:
+                   - Page first loads before events are fetched
+                   - After deleting all events
+                   - If database has no events
+                   
+                   Will be replaced by JavaScript with:
+                   - Event cards (if events exist)
+                   - Empty state (if no events)
+                   - Error message (if fetch fails)
+                   ======================================== -->
+              <div class="empty-state">
+                <!-- Calendar icon for visual context -->
+                <svg width="64" height="64" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin: 0 auto 16px; opacity: 0.3;">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                <p>No events created yet</p>
+                <small style="color: #999;">Create your first event using the form above</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Ideas Section -->
+      <section id="ideas-view" class="view-section" style="display:none;">
+        <!-- Create Idea Form -->
+        <div class="card">
+          <div class="card-header">
+            <h3>💡 Submit New Idea</h3>
+          </div>
+          <div class="card-body">
+            <form id="idea-form" class="idea-form">
+              <div class="form-grid">
+                <div class="form-group full-width">
+                  <label for="idea-title">Idea Title *</label>
+                  <input type="text" id="idea-title" required placeholder="Enter a catchy title for your idea">
+                </div>
+
+                <div class="form-group full-width">
+                  <label for="idea-description">Idea Description *</label>
+                  <textarea id="idea-description" required placeholder="Describe your idea in detail..." rows="4"></textarea>
+                </div>
+
+                <div class="form-group">
+                  <label for="idea-added-by">Added By *</label>
+                  <input type="text" id="idea-added-by" required placeholder="Your name" list="idea-names-list">
+                  <datalist id="idea-names-list"></datalist>
+                </div>
+
+                <div class="form-group">
+                  <label for="idea-status">Status</label>
+                  <select id="idea-status">
+                    <option value="proposed">Proposed</option>
+                    <option value="under review">Under Review</option>
+                    <option value="in progress">In Progress</option>
+                    <option value="implemented">Implemented</option>
+                    <option value="archived">Archived</option>
+                  </select>
+                </div>
+
+                <div class="form-group full-width">
+                  <label for="idea-priority">Priority: <span id="idea-priority-value">Medium</span></label>
+                  <input type="range" id="idea-priority" min="1" max="3" value="2" class="priority-slider">
+                  <div class="priority-labels">
+                    <span>Low</span>
+                    <span>Medium</span>
+                    <span>High</span>
+                  </div>
+                </div>
+
+                <div class="form-group full-width">
+                  <label>Attachments (Max 3)</label>
+                  <div id="idea-attachments-container">
+                    <div class="attachment-input-group">
+                      <input type="file" id="idea-attachment-1" class="idea-attachment-input" accept="image/*,.pdf,.doc,.docx">
+                      <input type="text" id="idea-caption-1" class="idea-caption-input" placeholder="Caption (optional)">
+                    </div>
+                    <div class="attachment-input-group" style="display:none;">
+                      <input type="file" id="idea-attachment-2" class="idea-attachment-input" accept="image/*,.pdf,.doc,.docx">
+                      <input type="text" id="idea-caption-2" class="idea-caption-input" placeholder="Caption (optional)">
+                    </div>
+                    <div class="attachment-input-group" style="display:none;">
+                      <input type="file" id="idea-attachment-3" class="idea-attachment-input" accept="image/*,.pdf,.doc,.docx">
+                      <input type="text" id="idea-caption-3" class="idea-caption-input" placeholder="Caption (optional)">
+                    </div>
+                  </div>
+                  <button type="button" class="btn btn-secondary btn-small" id="add-attachment-btn" style="margin-top:8px;">+ Add Attachment</button>
+                </div>
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" class="btn btn-primary" id="submit-idea-btn">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right: 8px;">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                  </svg>
+                  Submit Idea
+                </button>
+                <button type="button" class="btn btn-secondary" id="cancel-idea-btn">Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Ideas List -->
+        <div class="card" style="margin-top: 24px;">
+          <div class="card-header">
+            <h3>📋 All Ideas</h3>
+            <div class="header-actions">
+              <button class="btn btn-secondary" id="refresh-ideas-btn">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+                Refresh
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div id="ideas-list">
+              <div class="empty-state">
+                <svg width="64" height="64" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin: 0 auto 16px; opacity: 0.3;">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                </svg>
+                <p>No ideas submitted yet</p>
+                <small style="color: #999;">Be the first to share your brilliant idea!</small>
+              </div>
             </div>
           </div>
         </div>

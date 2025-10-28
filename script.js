@@ -1,94 +1,308 @@
-// Global function to show views - accessible from anywhere
+// ============================================
+// script.js - AI Team Collaboration Frontend
+// ============================================
+//
+// DESCRIPTION:
+// This is the main JavaScript file for the AI Team Collaboration application.
+// It implements a Single Page Application (SPA) architecture where all views
+// are dynamically loaded and switched without page reloads.
+//
+// ARCHITECTURE:
+// - Single Page Application (SPA) with dynamic view switching
+// - RESTful API communication with Flask backend
+// - Event-driven programming with DOM manipulation
+// - Modular function design for maintainability
+//
+// KEY FEATURES:
+// 1. Navigation System - Switch between different views (Projects, Tasks, Events, Ideas, etc.)
+// 2. Project Management - Create, edit, delete projects
+// 3. Task Management - Hierarchical tasks with subtasks and dependencies
+// 4. Events System - Team events and competitions with participation tracking
+// 5. Ideas Platform - Innovation ideas with voting and commenting
+// 6. AI Suggestions - AI-powered recommendations for task management
+// 7. Calendar View - Visual timeline of task deadlines
+// 8. Graph Visualization - D3.js-based project and task relationship diagrams
+// 9. File Attachments - Upload and download task-related files
+// 10. Alerts System - Notifications and reminders
+// 11. Chat Integration - Real-time team communication
+//
+// API ENDPOINTS USED:
+// - /api/projects - Project CRUD operations
+// - /api/tasks - Task management
+// - /api/events - Event management
+// - /api/ideas - Ideas submission and voting
+// - /api/attachments - File handling
+// - /api/alerts - Notification system
+// - /api/ai-suggestions - AI recommendations
+// - /api/chat - Chat messages
+//
+// DESIGN PATTERNS:
+// - Module Pattern: Functions grouped by feature
+// - Async/Await: For clean asynchronous code
+// - Event Delegation: For dynamic content
+// - Separation of Concerns: Data fetching, rendering, and UI logic separated
+//
+// BROWSER COMPATIBILITY:
+// - Modern browsers (Chrome, Firefox, Safari, Edge)
+// - Requires ES6+ support (async/await, arrow functions, template literals)
+// - Requires Fetch API support
+//
+// ============================================
+
+
+// ============================================
+// NAVIGATION SYSTEM
+// ============================================
+
+/**
+ * GLOBAL FUNCTION: showView()
+ * 
+ * Central navigation function that switches between different views in the SPA.
+ * This function is attached to the window object to make it globally accessible
+ * from anywhere in the code, including inline event handlers.
+ * 
+ * How It Works:
+ * 1. Updates navigation menu to highlight active item
+ * 2. Updates page header with view title and subtitle
+ * 3. Hides all view sections
+ * 4. Shows the requested view section
+ * 5. Loads data for the selected view
+ * 
+ * @param {string} view - The name of the view to display
+ *                        Valid values: 'projects', 'tasks', 'events', 'ideas',
+ *                        'ai-suggestions', 'calendar', 'graph', 'attachments', 'alerts'
+ * 
+ * @example
+ * showView('projects');  // Switches to projects view
+ * showView('tasks');     // Switches to tasks view
+ * 
+ * HTML Integration:
+ * This function is called when users click on navigation items or when
+ * the application needs to programmatically switch views.
+ */
 window.showView = function(view) {
+  // Log the navigation action for debugging
   console.log(`🧭 showView called: "${view}"`);
   
-  // Update active state in navigation
+  // ========================================
+  // STEP 1: UPDATE NAVIGATION MENU
+  // ========================================
+  // Remove 'active' class from all navigation items
+  // Then add 'active' class to the clicked item
   document.querySelectorAll('.nav-item').forEach(i => {
-    i.classList.remove('active');
+    i.classList.remove('active');  // Remove active state from all items
+    
+    // If this nav item matches the requested view, make it active
     if (i.dataset.view === view) {
       i.classList.add('active');
     }
   });
 
-  // Update header
+  // ========================================
+  // STEP 2: UPDATE PAGE HEADER
+  // ========================================
+  // Update the main title and subtitle in the header section
   const viewTitle = document.getElementById('view-title');
   const viewSubtitle = document.getElementById('view-subtitle');
+  
+  // Set the title (capitalize first letter)
   if (viewTitle) {
     viewTitle.textContent = view.charAt(0).toUpperCase() + view.slice(1);
   }
+  
+  // Set the descriptive subtitle
   if (viewSubtitle) {
     viewSubtitle.textContent = getViewSubtitle(view);
   }
 
-  // Show/hide views
+  // ========================================
+  // STEP 3: SWITCH VIEW SECTIONS
+  // ========================================
+  // Hide all view sections first
   document.querySelectorAll('.view-section').forEach(sec => sec.style.display = 'none');
+  
+  // Show the requested view section
   const targetView = document.getElementById(`${view}-view`);
   if (targetView) {
     targetView.style.display = 'block';
     console.log(`✅ Showing view: ${view}`);
   } else {
+    // Log error if the view doesn't exist (helps with debugging)
     console.error(`❌ View not found: ${view}-view`);
   }
 
-  // Load data for the view
+  // ========================================
+  // STEP 4: LOAD VIEW DATA
+  // ========================================
+  // Trigger data loading for the selected view
+  // This ensures fresh data is displayed when switching views
   loadViewData(view);
 }
 
-// Simple navigation for PS16 Collaborative Workspace
+
+// ============================================
+// APPLICATION INITIALIZATION
+// ============================================
+
+/**
+ * DOMContentLoaded Event Handler
+ * 
+ * This event fires when the HTML document has been completely loaded and parsed,
+ * without waiting for stylesheets, images, and subframes to finish loading.
+ * 
+ * Initialization Steps:
+ * 1. Set up navigation event listeners for all menu items
+ * 2. Load initial data (projects and tasks)
+ * 3. Set up any global event handlers
+ * 
+ * Why DOMContentLoaded?
+ * - Ensures all HTML elements exist before JavaScript tries to access them
+ * - Faster than 'load' event (which waits for all resources)
+ * - Best practice for initializing JavaScript applications
+ */
 document.addEventListener('DOMContentLoaded', () => {
+  // Log successful application load
   console.log('🚀 PS16 Workspace loaded');
 
-  // Set up navigation
+  // ========================================
+  // SET UP NAVIGATION EVENT LISTENERS
+  // ========================================
+  // Find all navigation items and attach click handlers
   document.querySelectorAll('.nav-item').forEach(item => {
     item.addEventListener('click', () => {
+      // Get the view name from the data-view attribute
       const view = item.dataset.view;
+      
+      // If a valid view is specified, show it
       if (view) {
         showView(view);
       }
     });
   });
 
-  // Load initial data
+  // ========================================
+  // LOAD INITIAL DATA
+  // ========================================
+  // Pre-load project data for the projects view
   loadProjects();
+  
+  // Pre-load tasks for dropdown/select elements
+  // This is used in various forms throughout the application
   loadTasksForSelect();
 
+  // Log successful initialization
   console.log('✅ PS16 Workspace initialized');
 });
 
+
+// ============================================
+// VIEW SUBTITLE CONFIGURATION
+// ============================================
+
+/**
+ * Get the descriptive subtitle for each view.
+ * 
+ * Subtitles provide users with context about what each view does.
+ * They appear in the header section below the main title.
+ * 
+ * @param {string} view - The name of the view
+ * @returns {string} - The descriptive subtitle for the view
+ * 
+ * Example Usage:
+ * getViewSubtitle('projects');  // Returns: "Manage your projects and track progress"
+ */
 function getViewSubtitle(view) {
+  // Object mapping view names to their subtitles
   const subtitles = {
     'ai-suggestions': 'Get AI-powered suggestions for your tasks',
     calendar: 'View and manage task deadlines',
     graph: 'Visual project and task relationships',
+    ideas: 'Share and manage innovative ideas for the team',
+    events: 'Create and manage team events and competitions',
     projects: 'Manage your projects and track progress',
     tasks: 'Create and manage tasks for your projects',
     attachments: 'Upload and manage project files',
     alerts: 'Stay updated with important notifications and alerts'
   };
+  
+  // Return the subtitle for the requested view
+  // If view doesn't exist in the map, return empty string
   return subtitles[view] || '';
 }
 
+
+// ============================================
+// VIEW DATA LOADING DISPATCHER
+// ============================================
+
+/**
+ * Load data for a specific view.
+ * 
+ * This function acts as a dispatcher that calls the appropriate
+ * data loading function based on the selected view. Each view has
+ * its own loading function that fetches data from the backend API.
+ * 
+ * Why async?
+ * - All data loading functions make HTTP requests (async operations)
+ * - Using async/await makes the code cleaner and easier to read
+ * - Allows proper error handling with try/catch
+ * 
+ * @param {string} view - The name of the view to load data for
+ * @returns {Promise<void>} - Resolves when data loading is complete
+ * 
+ * Example Flow:
+ * 1. User clicks "Projects" in navigation
+ * 2. showView('projects') is called
+ * 3. loadViewData('projects') is called
+ * 4. loadProjects() is called to fetch project data from API
+ * 5. Projects are rendered in the UI
+ */
 async function loadViewData(view) {
+  // Use a switch statement to call the appropriate loading function
+  // Each case corresponds to a different view in the application
   switch(view) {
     case 'ai-suggestions':
+      // Load AI-powered task suggestions
       await loadAISuggestions();
       break;
+      
     case 'calendar':
+      // Load calendar view with task deadlines
       await loadCalendar();
       break;
+      
     case 'graph':
+      // Load D3.js visualization of project/task relationships
       await loadGraph();
       break;
+      
+    case 'ideas':
+      // Load innovation ideas with voting/comments
+      await loadIdeas();
+      break;
+      
+    case 'events':
+      // Load team events and competitions
+      await loadEvents();
+      break;
+      
     case 'projects':
+      // Load all projects
       await loadProjects();
       break;
+      
     case 'tasks':
+      // Load all tasks with filtering options
       await loadTasks();
       break;
+      
     case 'alerts':
+      // Load notifications and alerts
       await loadAlerts();
       break;
+      
     case 'attachments':
+      // Load task list for attachment management
       await loadTasksForSelect();
       await loadAttachments();
       break;
@@ -3487,3 +3701,1079 @@ function showNotification(message, type = 'info') {
 }
 
 console.log('✅ Alerts functionality initialized');
+
+
+// ============================================
+// EVENTS FUNCTIONALITY
+// ============================================
+// This section handles all event management features including:
+// - Loading and displaying events from the database
+// - Creating new events
+// - Editing existing events
+// - Deleting events
+// - Form state management
+
+// ========================================
+// GLOBAL STATE VARIABLE
+// ========================================
+// currentEditingEventId: Tracks which event is currently being edited
+// - null: Form is in "create new event" mode
+// - number: Form is in "edit event" mode with the ID of the event being edited
+// This allows the same form to be used for both creating and editing
+let currentEditingEventId = null;
+
+// ========================================
+// LOAD EVENTS FUNCTION
+// ========================================
+/**
+ * Fetches all events from the backend and displays them in the UI
+ * 
+ * Called when:
+ * - User navigates to the Events page
+ * - After creating a new event
+ * - After updating an event
+ * - After deleting an event
+ * - When refresh button is clicked
+ * 
+ * Behavior:
+ * - Displays empty state if no events exist
+ * - Renders event cards if events exist
+ * - Shows error message if fetch fails
+ */
+async function loadEvents() {
+  console.log('📅 Loading events...');
+  
+  // Get the DOM element where events will be displayed
+  const eventsList = document.getElementById('events-list');
+  
+  // Safety check: if element doesn't exist, exit early (shouldn't happen)
+  if (!eventsList) return;
+  
+  try {
+    // ========================================
+    // FETCH DATA FROM BACKEND
+    // ========================================
+    // Make HTTP GET request to fetch all events
+    const response = await fetch('/api/events');
+    
+    // Parse JSON response body
+    const events = await response.json();
+    
+    // ========================================
+    // RENDER UI BASED ON DATA
+    // ========================================
+    if (events.length === 0) {
+      // NO EVENTS: Show empty state with calendar icon and helpful message
+      eventsList.innerHTML = `
+        <div class="empty-state">
+          <svg width="64" height="64" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin: 0 auto 16px; opacity: 0.3;">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+          </svg>
+          <p>No events created yet</p>
+          <small style="color: #999;">Create your first event using the form above</small>
+        </div>
+      `;
+    } else {
+      // EVENTS EXIST: Render each event as a card
+      // map() transforms each event object into HTML string
+      // join('') concatenates all HTML strings into one
+      eventsList.innerHTML = events.map(event => renderEventCard(event)).join('');
+    }
+    
+    // Log success message with count
+    console.log(`✅ Loaded ${events.length} events`);
+    
+  } catch (error) {
+    // ========================================
+    // ERROR HANDLING
+    // ========================================
+    // Log error to console for debugging
+    console.error('❌ Error loading events:', error);
+    
+    // Display user-friendly error message in the UI
+    eventsList.innerHTML = `
+      <div class="empty-state">
+        <p style="color: #ef4444;">Failed to load events</p>
+        <small style="color: #999;">${error.message}</small>
+      </div>
+    `;
+  }
+}
+
+// ========================================
+// RENDER EVENT CARD FUNCTION
+// ========================================
+/**
+ * Generates HTML markup for a single event card
+ * 
+ * @param {Object} event - Event data object from the database
+ * @returns {string} - HTML string for the event card
+ * 
+ * Features:
+ * - Displays event name, date, and organization
+ * - Shows team size and available slots
+ * - Lists team members (shows first 3, counts rest)
+ * - Includes edit and delete action buttons
+ * - Only shows optional fields if they have values
+ * - Uses semantic HTML with proper accessibility attributes
+ * 
+ * Structure:
+ * - Card Header: Icon, title, date, action buttons
+ * - Card Body: Grid layout with all event details
+ */
+function renderEventCard(event) {
+  // ========================================
+  // FORMAT EVENT DATE
+  // ========================================
+  // Convert ISO date string to human-readable format
+  // Example: "2025-01-15" → "Tue, Jan 15, 2025"
+  const eventDate = event.event_date ? new Date(event.event_date).toLocaleDateString('en-US', {
+    weekday: 'short',  // "Tue"
+    year: 'numeric',   // "2025"
+    month: 'short',    // "Jan"
+    day: 'numeric'     // "15"
+  }) : 'No date';
+  
+  // ========================================
+  // PROCESS TEAM MEMBERS STRING
+  // ========================================
+  // Team members are stored as comma-separated string: "Alice, Bob, Charlie"
+  // Split by comma, trim whitespace, remove empty strings
+  const teamMembers = event.team_members ? event.team_members.split(',').map(m => m.trim()).filter(m => m) : [];
+  
+  // Display logic:
+  // - 0 members: "No team members"
+  // - 1-3 members: "Alice, Bob, Charlie"
+  // - 4+ members: "Alice, Bob, Charlie +2 more"
+  const membersDisplay = teamMembers.length > 0 
+    ? teamMembers.slice(0, 3).join(', ') + (teamMembers.length > 3 ? ` +${teamMembers.length - 3} more` : '')
+    : 'No team members';
+  
+  // ========================================
+  // BUILD HTML TEMPLATE
+  // ========================================
+  // Returns a template literal string containing:
+  // 1. event-card container with data-event-id for identification
+  // 2. event-card-header with:
+  //    - Calendar emoji icon
+  //    - Event name and formatted date
+  //    - Edit and Delete action buttons (inline onclick handlers)
+  // 3. event-card-body with:
+  //    - Conditional rendering of optional fields (organisation, platform, team_size, etc.)
+  //    - Only displays fields that have values
+  //    - Uses ternary operators: ${condition ? html : ''} to show/hide fields
+  // 4. Special handling for event_name in delete button (escapes single quotes to prevent JS errors)
+  return `
+    <div class="event-card" data-event-id="${event.id}">
+      <div class="event-card-header">
+        <div class="event-icon">📅</div>
+        <div class="event-title-section">
+          <h4 class="event-title">${event.event_name}</h4>
+          <div class="event-date">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+            ${eventDate}
+          </div>
+        </div>
+        <div class="event-actions">
+          <button class="btn-icon" onclick="editEvent(${event.id})" title="Edit Event">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+            </svg>
+          </button>
+          <button class="btn-icon btn-danger" onclick="deleteEvent(${event.id}, '${event.event_name.replace(/'/g, "\\'")}'))" title="Delete Event">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      
+      <div class="event-card-body">
+        <div class="event-details">
+          ${event.organisation ? `
+            <div class="event-detail">
+              <span class="detail-label">Organisation:</span>
+              <span class="detail-value">${event.organisation}</span>
+            </div>
+          ` : ''}
+          
+          ${event.platform ? `
+            <div class="event-detail">
+              <span class="detail-label">Platform:</span>
+              <span class="detail-value">${event.platform}</span>
+            </div>
+          ` : ''}
+          
+          ${event.team_size ? `
+            <div class="event-detail">
+              <span class="detail-label">Team Size:</span>
+              <span class="detail-value">${event.team_size}</span>
+            </div>
+          ` : ''}
+          
+          ${event.team_slots_available !== null && event.team_slots_available !== undefined ? `
+            <div class="event-detail">
+              <span class="detail-label">Slots Available:</span>
+              <span class="detail-value">${event.team_slots_available}</span>
+            </div>
+          ` : ''}
+          
+          <div class="event-detail">
+            <span class="detail-label">Added By:</span>
+            <span class="detail-value">${event.added_by}</span>
+          </div>
+          
+          <div class="event-detail full-width">
+            <span class="detail-label">Team Members:</span>
+            <span class="detail-value team-members">${membersDisplay}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ========================================
+// EVENT FORM SUBMISSION HANDLER
+// ========================================
+/**
+ * Handles both CREATE and UPDATE operations for events
+ * 
+ * Flow:
+ * 1. Prevent default form submission (no page reload)
+ * 2. Collect all form data into an object
+ * 3. Show loading state on submit button
+ * 4. Check if currentEditingEventId exists:
+ *    - If yes: Send PUT request to update existing event
+ *    - If no: Send POST request to create new event
+ * 5. On success: Reset form, reload events list, show success message
+ * 6. On error: Show error message, re-enable button
+ * 
+ * Optional Chaining (?.) is used to prevent errors if element doesn't exist
+ */
+document.getElementById('event-form')?.addEventListener('submit', async (e) => {
+  // Prevent default form submission behavior (which would reload the page)
+  e.preventDefault();
+  
+  // ========================================
+  // COLLECT FORM DATA
+  // ========================================
+  // Get values from all form inputs
+  // - trim() removes leading/trailing whitespace
+  // - || null converts empty strings to null for optional fields
+  // - parseInt() converts string numbers to integers
+  const eventData = {
+    event_name: document.getElementById('event-name').value.trim(),
+    organisation: document.getElementById('event-organisation').value.trim() || null,
+    platform: document.getElementById('event-platform').value.trim() || null,
+    team_size: document.getElementById('event-team-size').value ? parseInt(document.getElementById('event-team-size').value) : null,
+    team_slots_available: document.getElementById('event-slots').value ? parseInt(document.getElementById('event-slots').value) : null,
+    added_by: document.getElementById('event-added-by').value.trim(),
+    event_date: document.getElementById('event-date').value,
+    team_members: document.getElementById('event-members').value.trim() || null
+  };
+  
+  // ========================================
+  // PREPARE UI FOR LOADING STATE
+  // ========================================
+  const createBtn = document.getElementById('create-event-btn');
+  const originalBtnText = createBtn.innerHTML;  // Save to restore later
+  
+  try {
+    // Disable button to prevent double-submission
+    createBtn.disabled = true;
+    
+    // Show loading spinner and dynamic text based on operation
+    createBtn.innerHTML = `
+      <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="animation: spin 1s linear infinite; margin-right: 8px;">
+        <circle cx="12" cy="12" r="10" stroke-width="4" stroke="currentColor" fill="none" opacity="0.25"/>
+        <path d="M4 12a8 8 0 018-8" stroke-width="4" stroke="currentColor" fill="none" stroke-linecap="round"/>
+      </svg>
+      ${currentEditingEventId ? 'Updating...' : 'Creating...'}
+    `;
+    
+    // ========================================
+    // SEND HTTP REQUEST
+    // ========================================
+    let response;
+    
+    if (currentEditingEventId) {
+      // MODE: UPDATE EXISTING EVENT
+      // Send PUT request with event ID in URL
+      response = await fetch(`/api/events/${currentEditingEventId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(eventData)
+      });
+    } else {
+      // MODE: CREATE NEW EVENT
+      // Send POST request to events endpoint
+      response = await fetch('/api/events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(eventData)
+      });
+    }
+    
+    // ========================================
+    // CHECK RESPONSE STATUS
+    // ========================================
+    // If response is not OK (2xx status), throw error with server message
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to save event');
+    }
+    
+    // ========================================
+    // SUCCESS HANDLING
+    // ========================================
+    // Reset the form to clear all inputs
+    document.getElementById('event-form').reset();
+    
+    // Clear the editing state (back to create mode)
+    currentEditingEventId = null;
+    
+    // Restore original button text
+    createBtn.innerHTML = originalBtnText;
+    
+    // Reload the events list to show the new/updated event
+    await loadEvents();
+    
+    // Show success notification to user
+    // Note: currentEditingEventId will always be null here due to line above
+    // This is a bug - should check before setting to null
+    showNotification(currentEditingEventId ? '✅ Event updated successfully!' : '✅ Event created successfully!', 'success');
+    
+  } catch (error) {
+    // ========================================
+    // ERROR HANDLING
+    // ========================================
+    // Log error to console for debugging
+    console.error('❌ Error saving event:', error);
+    
+    // Restore original button text
+    createBtn.innerHTML = originalBtnText;
+    
+    // Show error notification to user with error message
+    showNotification(`❌ Failed to save event: ${error.message}`, 'error');
+    
+  } finally {
+    // ========================================
+    // CLEANUP
+    // ========================================
+    // Re-enable button regardless of success or failure
+    // This runs after try or catch block completes
+    createBtn.disabled = false;
+  }
+});
+
+// ========================================
+// CANCEL BUTTON HANDLER
+// ========================================
+/**
+ * Resets the form to initial state
+ * 
+ * Purpose:
+ * - Clear all form inputs
+ * - Exit edit mode (if in edit mode)
+ * - Reset button back to "Create Event" text
+ * 
+ * This allows users to abandon creating/editing without submitting
+ */
+document.getElementById('cancel-event-btn')?.addEventListener('click', () => {
+  // Clear all form field values
+  document.getElementById('event-form').reset();
+  
+  // Exit edit mode by setting ID back to null
+  currentEditingEventId = null;
+  
+  // Reset button to original "Create Event" state
+  document.getElementById('create-event-btn').innerHTML = `
+    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right: 8px;">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+    </svg>
+    Create Event
+  `;
+});
+
+// ========================================
+// EDIT EVENT FUNCTION
+// ========================================
+/**
+ * Loads an existing event into the form for editing
+ * 
+ * @param {number} eventId - ID of the event to edit
+ * 
+ * Flow:
+ * 1. Fetch event data from backend by ID
+ * 2. Populate all form fields with existing values
+ * 3. Set currentEditingEventId to track edit mode
+ * 4. Change button text to "Update Event"
+ * 5. Scroll form into view for user convenience
+ * 
+ * Called when user clicks the Edit (pencil) icon on an event card
+ * Attached to window object so it can be called from inline onclick in HTML
+ */
+window.editEvent = async function(eventId) {
+  try {
+    // ========================================
+    // FETCH EVENT DATA
+    // ========================================
+    const response = await fetch(`/api/events/${eventId}`);
+    const event = await response.json();
+    
+    // ========================================
+    // POPULATE FORM FIELDS
+    // ========================================
+    // Fill each input with existing event data
+    // || '' provides empty string fallback if value is null
+    document.getElementById('event-name').value = event.event_name || '';
+    document.getElementById('event-organisation').value = event.organisation || '';
+    document.getElementById('event-platform').value = event.platform || '';
+    document.getElementById('event-team-size').value = event.team_size || '';
+    document.getElementById('event-slots').value = event.team_slots_available || '';
+    document.getElementById('event-added-by').value = event.added_by || '';
+    document.getElementById('event-date').value = event.event_date || '';
+    document.getElementById('event-members').value = event.team_members || '';
+    
+    // Update form state
+    currentEditingEventId = eventId;
+    document.getElementById('create-event-btn').innerHTML = `
+      <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right: 8px;">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+      </svg>
+      Update Event
+    `;
+    
+    // Scroll to form
+    document.getElementById('event-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    
+  } catch (error) {
+    console.error('❌ Error loading event:', error);
+    showNotification(`❌ Failed to load event: ${error.message}`, 'error');
+  }
+};
+
+// ========================================
+// DELETE EVENT FUNCTION
+// ========================================
+/**
+ * Permanently deletes an event from the database
+ * 
+ * @param {number} eventId - ID of the event to delete
+ * @param {string} eventName - Name of event (for confirmation dialog)
+ * 
+ * Flow:
+ * 1. Show confirmation dialog (prevents accidental deletion)
+ * 2. If confirmed, send DELETE request to backend
+ * 3. On success: Reload events list, show success message
+ * 4. On error: Show error message
+ * 
+ * Called when user clicks the Delete (trash) icon on an event card
+ * Attached to window object so it can be called from inline onclick in HTML
+ * 
+ * Security Note:
+ * - Confirmation dialog is the only safeguard
+ * - There is NO undo functionality
+ * - Deletion is immediate and permanent
+ */
+window.deleteEvent = async function(eventId, eventName) {
+  // ========================================
+  // CONFIRMATION DIALOG
+  // ========================================
+  // Show browser confirmation dialog with event name
+  // Returns true if user clicks OK, false if Cancel
+  if (!confirm(`Are you sure you want to delete "${eventName}"?\n\nThis action cannot be undone.`)) {
+    return;  // Exit function if user cancels
+  }
+  
+  try {
+    // ========================================
+    // SEND DELETE REQUEST
+    // ========================================
+    const response = await fetch(`/api/events/${eventId}`, {
+      method: 'DELETE'
+    });
+    
+    // Check if deletion was successful
+    if (!response.ok) {
+      throw new Error('Failed to delete event');
+    }
+    
+    // ========================================
+    // SUCCESS HANDLING
+    // ========================================
+    // Reload events list (deleted event will be gone)
+    await loadEvents();
+    
+    // Show success notification
+    showNotification('✅ Event deleted successfully!', 'success');
+    
+  } catch (error) {
+    // ========================================
+    // ERROR HANDLING
+    // ========================================
+    console.error('❌ Error deleting event:', error);
+    showNotification(`❌ Failed to delete event: ${error.message}`, 'error');
+  }
+};
+
+// ========================================
+// REFRESH EVENTS BUTTON HANDLER
+// ========================================
+/**
+ * Manually reloads the events list
+ * 
+ * Purpose:
+ * - Allows users to fetch latest data from database
+ * - Useful if events are created/modified by other users
+ * - Provides visual feedback with loading state
+ * 
+ * Flow:
+ * 1. Disable button and show loading spinner
+ * 2. Call loadEvents() to fetch fresh data
+ * 3. Restore button to original state
+ */
+document.getElementById('refresh-events-btn')?.addEventListener('click', async () => {
+  const btn = document.getElementById('refresh-events-btn');
+  
+  // Save original button HTML to restore later
+  const originalHTML = btn.innerHTML;
+  
+  // ========================================
+  // SHOW LOADING STATE
+  // ========================================
+  // Disable button to prevent multiple refresh clicks
+  btn.disabled = true;
+  
+  // Replace button content with spinning icon and "Refreshing..." text
+  btn.innerHTML = `
+    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="animation: spin 1s linear infinite;">
+      <circle cx="12" cy="12" r="10" stroke-width="4" stroke="currentColor" fill="none" opacity="0.25"/>
+      <path d="M4 12a8 8 0 018-8" stroke-width="4" stroke="currentColor" fill="none" stroke-linecap="round"/>
+    </svg>
+    Refreshing...
+  `;
+  
+  // ========================================
+  // RELOAD EVENTS
+  // ========================================
+  // Fetch and display latest events from database
+  await loadEvents();
+  
+  // ========================================
+  // RESTORE BUTTON STATE
+  // ========================================
+  // Put back original button HTML
+  btn.innerHTML = originalHTML;
+  
+  // Re-enable button for future clicks
+  btn.disabled = false;
+});
+
+console.log('✅ Events functionality initialized');
+// ============================================
+// IDEAS FUNCTIONALITY
+// ============================================
+
+let currentEditingIdeaId = null;
+let attachmentCount = 1;
+let usedNames = new Set();
+
+// Load all ideas
+async function loadIdeas() {
+  console.log('💡 Loading ideas...');
+  const ideasList = document.getElementById('ideas-list');
+  
+  if (!ideasList) return;
+  
+  try {
+    const response = await fetch('/api/ideas');
+    const ideas = await response.json();
+    
+    // Collect used names for autocomplete
+    ideas.forEach(idea => {
+      usedNames.add(idea.added_by);
+      if (idea.likes) {
+        idea.likes.split(',').filter(n => n.trim()).forEach(name => usedNames.add(name.trim()));
+      }
+      if (idea.comments && idea.comments.length > 0) {
+        idea.comments.forEach(comment => usedNames.add(comment.name));
+      }
+    });
+    updateNameDatalist();
+    
+    if (ideas.length === 0) {
+      ideasList.innerHTML = `
+        <div class="empty-state">
+          <svg width="64" height="64" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin: 0 auto 16px; opacity: 0.3;">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+          </svg>
+          <p>No ideas submitted yet</p>
+          <small style="color: #999;">Be the first to share your brilliant idea!</small>
+        </div>
+      `;
+    } else {
+      ideasList.innerHTML = ideas.map(idea => renderIdeaCard(idea)).join('');
+    }
+    
+    console.log(`✅ Loaded ${ideas.length} ideas`);
+  } catch (error) {
+    console.error('❌ Error loading ideas:', error);
+    ideasList.innerHTML = `
+      <div class="empty-state">
+        <p style="color: #ef4444;">Failed to load ideas</p>
+        <small style="color: #999;">${error.message}</small>
+      </div>
+    `;
+  }
+}
+
+// Update name datalist
+function updateNameDatalist() {
+  const datalist = document.getElementById('idea-names-list');
+  if (datalist) {
+    datalist.innerHTML = Array.from(usedNames).map(name => `<option value="${name}">`).join('');
+  }
+}
+
+// Render a single idea card
+function renderIdeaCard(idea) {
+  const createdDate = idea.created_at ? new Date(idea.created_at).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  }) : 'Unknown date';
+  
+  const likesArray = idea.likes ? idea.likes.split(',').filter(n => n.trim()) : [];
+  const likesCount = likesArray.length;
+  const commentsCount = idea.comments ? idea.comments.length : 0;
+  
+  const priorityClass = idea.priority === 'high' ? 'priority-high' : 
+                        idea.priority === 'low' ? 'priority-low' : 'priority-medium';
+  
+  const statusClass = idea.status.replace(' ', '-');
+  
+  // Render attachments preview
+  let attachmentsHtml = '';
+  if (idea.attachments && idea.attachments.length > 0) {
+    attachmentsHtml = `
+      <div class="idea-attachments">
+        <strong>Attachments:</strong>
+        <div class="attachments-preview">
+          ${idea.attachments.map((att, idx) => `
+            <div class="attachment-preview">
+              ${att.type && att.type.startsWith('image/') ? 
+                `<img src="${att.data}" alt="${att.name}" class="attachment-img">` :
+                `<div class="attachment-file">
+                  <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                  </svg>
+                  <span>${att.name}</span>
+                </div>`
+              }
+              ${att.caption ? `<p class="attachment-caption">${att.caption}</p>` : ''}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+  
+  return `
+    <div class="idea-card" data-idea-id="${idea.id}">
+      <div class="idea-card-header">
+        <div class="idea-header-left">
+          <div class="idea-icon">💡</div>
+          <div>
+            <h4 class="idea-title">${idea.idea_title}</h4>
+            <div class="idea-meta">
+              <span class="idea-author">by ${idea.added_by}</span>
+              <span class="idea-date">${createdDate}</span>
+            </div>
+          </div>
+        </div>
+        <div class="idea-header-right">
+          <span class="idea-status status-${statusClass}">${idea.status}</span>
+          <span class="idea-priority ${priorityClass}">${idea.priority}</span>
+          <div class="idea-actions">
+            <button class="btn-icon" onclick="editIdea(${idea.id})" title="Edit Idea">
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+              </svg>
+            </button>
+            <button class="btn-icon btn-danger" onclick="deleteIdea(${idea.id}, '${idea.idea_title.replace(/'/g, "\\'")}'))" title="Delete Idea">
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="idea-card-body">
+        <p class="idea-description">${idea.idea_description}</p>
+        
+        ${attachmentsHtml}
+        
+        <div class="idea-interactions">
+          <button class="idea-interaction-btn" onclick="toggleLikeIdea(${idea.id})">
+            <svg width="20" height="20" fill="${likesArray.length > 0 ? 'currentColor' : 'none'}" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+            </svg>
+            <span id="likes-count-${idea.id}">${likesCount}</span> Like${likesCount !== 1 ? 's' : ''}
+          </button>
+          
+          <button class="idea-interaction-btn" onclick="toggleComments(${idea.id})">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/>
+            </svg>
+            ${commentsCount} Comment${commentsCount !== 1 ? 's' : ''}
+          </button>
+        </div>
+        
+        ${likesCount > 0 ? `
+          <div class="idea-likes-list">
+            <small>Liked by: ${likesArray.join(', ')}</small>
+          </div>
+        ` : ''}
+        
+        <div class="idea-comments" id="comments-${idea.id}" style="display:none;">
+          <div class="comments-list" id="comments-list-${idea.id}">
+            ${idea.comments && idea.comments.length > 0 ? 
+              idea.comments.map(comment => `
+                <div class="comment">
+                  <strong>${comment.name}</strong>
+                  <p>${comment.text}</p>
+                  <small>${new Date(comment.timestamp).toLocaleString()}</small>
+                </div>
+              `).join('') : 
+              '<p class="no-comments">No comments yet</p>'
+            }
+          </div>
+          <div class="add-comment-form">
+            <input type="text" id="comment-name-${idea.id}" placeholder="Your name" list="idea-names-list" class="comment-input">
+            <input type="text" id="comment-text-${idea.id}" placeholder="Add a comment..." class="comment-input">
+            <button class="btn btn-primary btn-small" onclick="addComment(${idea.id})">Post</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// Toggle like on idea
+async function toggleLikeIdea(ideaId) {
+  const name = prompt('Enter your name to like this idea:');
+  if (!name || !name.trim()) return;
+  
+  try {
+    const response = await fetch(`/api/ideas/${ideaId}`);
+    const idea = await response.json();
+    
+    const likesArray = idea.likes ? idea.likes.split(',').filter(n => n.trim()) : [];
+    const nameIndex = likesArray.indexOf(name.trim());
+    
+    if (nameIndex > -1) {
+      likesArray.splice(nameIndex, 1);
+    } else {
+      likesArray.push(name.trim());
+      usedNames.add(name.trim());
+      updateNameDatalist();
+    }
+    
+    idea.likes = likesArray.join(',');
+    
+    const updateResponse = await fetch(`/api/ideas/${ideaId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(idea)
+    });
+    
+    if (!updateResponse.ok) throw new Error('Failed to update likes');
+    
+    await loadIdeas();
+    showNotification(nameIndex > -1 ? '👍 Like removed' : '❤️ Liked!', 'success');
+  } catch (error) {
+    console.error('Error toggling like:', error);
+    showNotification('❌ Failed to update like', 'error');
+  }
+}
+
+// Toggle comments section
+function toggleComments(ideaId) {
+  const commentsSection = document.getElementById(`comments-${ideaId}`);
+  if (commentsSection) {
+    commentsSection.style.display = commentsSection.style.display === 'none' ? 'block' : 'none';
+  }
+}
+
+// Add comment to idea
+async function addComment(ideaId) {
+  const nameInput = document.getElementById(`comment-name-${ideaId}`);
+  const textInput = document.getElementById(`comment-text-${ideaId}`);
+  
+  const name = nameInput.value.trim();
+  const text = textInput.value.trim();
+  
+  if (!name || !text) {
+    showNotification('❌ Please enter your name and comment', 'error');
+    return;
+  }
+  
+  try {
+    const response = await fetch(`/api/ideas/${ideaId}`);
+    const idea = await response.json();
+    
+    if (!idea.comments) idea.comments = [];
+    
+    idea.comments.push({
+      name: name,
+      text: text,
+      timestamp: new Date().toISOString()
+    });
+    
+    usedNames.add(name);
+    updateNameDatalist();
+    
+    const updateResponse = await fetch(`/api/ideas/${ideaId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(idea)
+    });
+    
+    if (!updateResponse.ok) throw new Error('Failed to add comment');
+    
+    nameInput.value = '';
+    textInput.value = '';
+    
+    await loadIdeas();
+    toggleComments(ideaId);
+    showNotification('💬 Comment added!', 'success');
+  } catch (error) {
+    console.error('Error adding comment:', error);
+    showNotification('❌ Failed to add comment', 'error');
+  }
+}
+
+// Handle idea form submission
+document.getElementById('idea-form')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  // Collect attachments
+  const attachments = [];
+  for (let i = 1; i <= 3; i++) {
+    const fileInput = document.getElementById(`idea-attachment-${i}`);
+    const captionInput = document.getElementById(`idea-caption-${i}`);
+    
+    if (fileInput && fileInput.files.length > 0) {
+      const file = fileInput.files[0];
+      const reader = new FileReader();
+      
+      await new Promise((resolve) => {
+        reader.onload = (e) => {
+          attachments.push({
+            name: file.name,
+            type: file.type,
+            data: e.target.result,
+            caption: captionInput.value.trim()
+          });
+          resolve();
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+  }
+  
+  const priorityValue = document.getElementById('idea-priority').value;
+  const priorityMap = { '1': 'low', '2': 'medium', '3': 'high' };
+  
+  const ideaData = {
+    idea_title: document.getElementById('idea-title').value.trim(),
+    idea_description: document.getElementById('idea-description').value.trim(),
+    added_by: document.getElementById('idea-added-by').value.trim(),
+    status: document.getElementById('idea-status').value,
+    priority: priorityMap[priorityValue],
+    likes: '',
+    comments: [],
+    attachments: attachments
+  };
+  
+  const submitBtn = document.getElementById('submit-idea-btn');
+  const originalBtnText = submitBtn.innerHTML;
+  
+  try {
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `
+      <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="animation: spin 1s linear infinite; margin-right: 8px;">
+        <circle cx="12" cy="12" r="10" stroke-width="4" stroke="currentColor" fill="none" opacity="0.25"/>
+        <path d="M4 12a8 8 0 018-8" stroke-width="4" stroke="currentColor" fill="none" stroke-linecap="round"/>
+      </svg>
+      ${currentEditingIdeaId ? 'Updating...' : 'Submitting...'}
+    `;
+    
+    let response;
+    if (currentEditingIdeaId) {
+      const existingIdea = await fetch(`/api/ideas/${currentEditingIdeaId}`).then(r => r.json());
+      ideaData.likes = existingIdea.likes;
+      ideaData.comments = existingIdea.comments;
+      
+      response = await fetch(`/api/ideas/${currentEditingIdeaId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(ideaData)
+      });
+    } else {
+      response = await fetch('/api/ideas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(ideaData)
+      });
+    }
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to save idea');
+    }
+    
+    document.getElementById('idea-form').reset();
+    currentEditingIdeaId = null;
+    submitBtn.innerHTML = originalBtnText;
+    document.getElementById('idea-priority-value').textContent = 'Medium';
+    resetAttachments();
+    await loadIdeas();
+    
+    showNotification(currentEditingIdeaId ? '✅ Idea updated!' : '✅ Idea submitted!', 'success');
+    
+  } catch (error) {
+    console.error('❌ Error saving idea:', error);
+    submitBtn.innerHTML = originalBtnText;
+    showNotification(`❌ Failed: ${error.message}`, 'error');
+  } finally {
+    submitBtn.disabled = false;
+  }
+});
+
+// Priority slider handler
+document.getElementById('idea-priority')?.addEventListener('input', (e) => {
+  const value = e.target.value;
+  const labels = ['Low', 'Medium', 'High'];
+  document.getElementById('idea-priority-value').textContent = labels[value - 1];
+});
+
+// Add attachment button
+document.getElementById('add-attachment-btn')?.addEventListener('click', () => {
+  if (attachmentCount < 3) {
+    attachmentCount++;
+    const group = document.querySelector(`.attachment-input-group:nth-child(${attachmentCount})`);
+    if (group) group.style.display = 'flex';
+    
+    if (attachmentCount === 3) {
+      document.getElementById('add-attachment-btn').style.display = 'none';
+    }
+  }
+});
+
+// Reset attachments
+function resetAttachments() {
+  attachmentCount = 1;
+  for (let i = 2; i <= 3; i++) {
+    const group = document.querySelector(`.attachment-input-group:nth-child(${i})`);
+    if (group) group.style.display = 'none';
+  }
+  document.getElementById('add-attachment-btn').style.display = 'block';
+}
+
+// Cancel button
+document.getElementById('cancel-idea-btn')?.addEventListener('click', () => {
+  document.getElementById('idea-form').reset();
+  currentEditingIdeaId = null;
+  document.getElementById('submit-idea-btn').innerHTML = `
+    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right: 8px;">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+    </svg>
+    Submit Idea
+  `;
+  document.getElementById('idea-priority-value').textContent = 'Medium';
+  resetAttachments();
+});
+
+// Edit idea
+window.editIdea = async function(ideaId) {
+  try {
+    const response = await fetch(`/api/ideas/${ideaId}`);
+    const idea = await response.json();
+    
+    document.getElementById('idea-title').value = idea.idea_title || '';
+    document.getElementById('idea-description').value = idea.idea_description || '';
+    document.getElementById('idea-added-by').value = idea.added_by || '';
+    document.getElementById('idea-status').value = idea.status || 'proposed';
+    
+    const priorityMap = { 'low': '1', 'medium': '2', 'high': '3' };
+    const priorityValue = priorityMap[idea.priority] || '2';
+    document.getElementById('idea-priority').value = priorityValue;
+    document.getElementById('idea-priority-value').textContent = idea.priority.charAt(0).toUpperCase() + idea.priority.slice(1);
+    
+    currentEditingIdeaId = ideaId;
+    document.getElementById('submit-idea-btn').innerHTML = `
+      <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right: 8px;">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+      </svg>
+      Update Idea
+    `;
+    
+    document.getElementById('idea-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    
+  } catch (error) {
+    console.error('❌ Error loading idea:', error);
+    showNotification(`❌ Failed to load idea: ${error.message}`, 'error');
+  }
+};
+
+// Delete idea
+window.deleteIdea = async function(ideaId, ideaTitle) {
+  if (!confirm(`Are you sure you want to delete "${ideaTitle}"?\n\nThis action cannot be undone.`)) {
+    return;
+  }
+  
+  try {
+    const response = await fetch(`/api/ideas/${ideaId}`, {
+      method: 'DELETE'
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to delete idea');
+    }
+    
+    await loadIdeas();
+    showNotification('✅ Idea deleted successfully!', 'success');
+    
+  } catch (error) {
+    console.error('❌ Error deleting idea:', error);
+    showNotification(`❌ Failed to delete idea: ${error.message}`, 'error');
+  }
+};
+
+// Refresh ideas
+document.getElementById('refresh-ideas-btn')?.addEventListener('click', async () => {
+  const btn = document.getElementById('refresh-ideas-btn');
+  const originalHTML = btn.innerHTML;
+  
+  btn.disabled = true;
+  btn.innerHTML = `
+    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="animation: spin 1s linear infinite;">
+      <circle cx="12" cy="12" r="10" stroke-width="4" stroke="currentColor" fill="none" opacity="0.25"/>
+      <path d="M4 12a8 8 0 018-8" stroke-width="4" stroke="currentColor" fill="none" stroke-linecap="round"/>
+    </svg>
+    Refreshing...
+  `;
+  
+  await loadIdeas();
+  
+  btn.innerHTML = originalHTML;
+  btn.disabled = false;
+});
+
+console.log('✅ Ideas functionality initialized');
