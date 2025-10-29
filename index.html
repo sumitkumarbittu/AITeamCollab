@@ -17,6 +17,13 @@
       <p>Collaborative Workspace</p>
     </div>
     <div class="nav-menu">
+      <div class="nav-item active" data-view="create">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        Create
+      </div>
+
       <div class="nav-item" data-view="ai-suggestions">
         <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
@@ -45,7 +52,7 @@
         Events
       </div>
 
-      <div class="nav-item active" data-view="projects">
+      <div class="nav-item" data-view="projects">
         <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
         </svg>
@@ -100,6 +107,364 @@
     </div>
 
     <div class="content-area" id="content-area">
+      <!-- Create View - Centralized Create/Update Forms -->
+      <section id="create-view" class="view-section">
+        <!-- Tab Navigation -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">✨ Create New Items</h3>
+            <p style="margin: 0; color: #6b7280; font-size: 0.9rem;">Choose what you want to create</p>
+          </div>
+          <div class="create-tabs">
+            <button class="create-tab active" data-tab="project">
+              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+              </svg>
+              Project
+            </button>
+            <button class="create-tab" data-tab="task">
+              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+              </svg>
+              Task
+            </button>
+            <button class="create-tab" data-tab="event">
+              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+              </svg>
+              Event
+            </button>
+            <button class="create-tab" data-tab="idea">
+              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+              </svg>
+              Idea
+            </button>
+          </div>
+        </div>
+
+        <!-- Create Project Form -->
+        <div class="create-content active" data-content="project">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">📁 Create New Project</h3>
+            </div>
+            <div class="form-grid" style="padding: 16px 24px; background: #f8f9fa; border-radius: 8px; margin-bottom: 16px;">
+              <label style="grid-column: 1 / -1; font-weight: 600; color: #424242; margin-bottom: 8px;">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display: inline; vertical-align: middle; margin-right: 4px;">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"/>
+                </svg>
+                Quick Edit: Select Existing Project
+              </label>
+              <select class="form-select" id="project-selector" style="grid-column: 1 / -1;">
+                <option value="">➕ Create New Project</option>
+              </select>
+              <small style="grid-column: 1 / -1; color: #6b7280; font-size: 0.85rem; margin-top: -8px;">
+                💡 Select a project above to edit it, or create a new one below
+              </small>
+            </div>
+            <form id="create-project-form" class="form-grid">
+              <input type="text" class="form-input" id="project-name" placeholder="Project name *" required />
+              <input type="date" class="form-input" id="project-start" placeholder="Start date" />
+              <input type="date" class="form-input" id="project-end" placeholder="End date" />
+              <textarea class="form-textarea" id="project-desc" placeholder="Project description"></textarea>
+              <div class="form-actions" style="grid-column: 1 / -1; display: flex; gap: 12px;">
+                <button type="submit" class="btn btn-primary">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                  </svg>
+                  Create Project
+                </button>
+                <button type="button" class="btn btn-secondary" id="cancel-project-btn">Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Create Task Form -->
+        <div class="create-content" data-content="task">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">✓ Create New Task</h3>
+            </div>
+            <div class="form-grid" style="padding: 16px 24px; background: #f8f9fa; border-radius: 8px; margin-bottom: 16px;">
+              <label style="grid-column: 1 / -1; font-weight: 600; color: #424242; margin-bottom: 8px;">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display: inline; vertical-align: middle; margin-right: 4px;">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"/>
+                </svg>
+                Quick Edit: Select Existing Task
+              </label>
+              <select class="form-select" id="task-selector" style="grid-column: 1 / -1;">
+                <option value="">➕ Create New Task</option>
+              </select>
+              <small style="grid-column: 1 / -1; color: #6b7280; font-size: 0.85rem; margin-top: -8px;">
+                💡 Select a task above to edit it, or create a new one below
+              </small>
+            </div>
+            <form id="create-task-form" class="form-grid">
+              <select class="form-select" id="task-project-select" required>
+                <option value="">Select Project *</option>
+              </select>
+              <input type="text" class="form-input" id="task-title" placeholder="Task title *" required />
+              <input type="text" class="form-input" id="task-assigned" placeholder="Assigned to" />
+              <input type="date" class="form-input" id="task-due" placeholder="Due date" />
+              <div class="priority-slider-container">
+                <label class="priority-label">
+                  <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"/>
+                  </svg>
+                  <span>Task Priority</span>
+                </label>
+                <div class="priority-display" id="priority-display">
+                  <span class="priority-badge priority-3">🟡 Medium</span>
+                </div>
+                <input type="range" class="priority-slider" id="task-priority" min="1" max="5" value="3" step="1">
+                <div class="priority-labels">
+                  <span class="priority-high">Urgent</span>
+                  <span class="priority-normal">Medium</span>
+                  <span class="priority-low">Minimal</span>
+                </div>
+              </div>
+              
+              <div class="relationship-container">
+                <div class="relationship-box">
+                  <label class="relationship-label">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                    </svg>
+                    <span>Parent Task (Subtask of)</span>
+                  </label>
+                  <select class="form-select relationship-select" id="task-parent-select">
+                    <option value="">None (Independent Task)</option>
+                  </select>
+                  <small class="relationship-help">
+                    💡 Make this task a subtask of another parent task
+                  </small>
+                </div>
+                
+                <div class="relationship-box">
+                  <label class="relationship-label">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+                    </svg>
+                    <span>Depends On Task</span>
+                  </label>
+                  <select class="form-select relationship-select" id="task-depends-select">
+                    <option value="">No Dependencies</option>
+                  </select>
+                  <small class="relationship-help">
+                    💡 Block this task until the selected task is completed
+                  </small>
+                </div>
+              </div>
+              
+              <div class="form-actions" style="grid-column: 1 / -1; display: flex; gap: 12px;">
+                <button type="submit" class="btn btn-primary">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                  </svg>
+                  Create Task
+                </button>
+                <button type="button" class="btn btn-secondary" id="cancel-task-btn">Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Create Event Form -->
+        <div class="create-content" data-content="event">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">📅 Create New Event</h3>
+            </div>
+            <div class="card-body">
+              <div class="form-grid" style="padding: 16px 24px; background: #f8f9fa; border-radius: 8px; margin-bottom: 16px;">
+                <label style="grid-column: 1 / -1; font-weight: 600; color: #424242; margin-bottom: 8px;">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display: inline; vertical-align: middle; margin-right: 4px;">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"/>
+                  </svg>
+                  Quick Edit: Select Existing Event
+                </label>
+                <select class="form-select" id="event-selector" style="grid-column: 1 / -1;">
+                  <option value="">➕ Create New Event</option>
+                </select>
+                <small style="grid-column: 1 / -1; color: #6b7280; font-size: 0.85rem; margin-top: -8px;">
+                  💡 Select an event above to edit it, or create a new one below
+                </small>
+              </div>
+              <form id="event-form" class="event-form">
+                <div class="form-grid">
+                  <div class="form-group">
+                    <label for="event-name">Event Name *</label>
+                    <input type="text" id="event-name" required placeholder="Enter event name">
+                  </div>
+
+                  <div class="form-group">
+                    <label for="event-organisation">Organisation</label>
+                    <input type="text" id="event-organisation" placeholder="Enter organisation (optional)" list="organisation-list">
+                    <datalist id="organisation-list"></datalist>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="event-platform">Platform</label>
+                    <input type="text" id="event-platform" placeholder="Enter platform (optional)" list="platform-list">
+                    <datalist id="platform-list"></datalist>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="event-team-size">Team Size</label>
+                    <input type="number" id="event-team-size" min="1" placeholder="Enter team size (optional)">
+                  </div>
+
+                  <div class="form-group">
+                    <label for="event-slots">Team Slots Available</label>
+                    <input type="number" id="event-slots" min="0" placeholder="Enter slots available (optional)">
+                  </div>
+
+                  <div class="form-group">
+                    <label for="event-added-by">Added By *</label>
+                    <input type="text" id="event-added-by" required placeholder="Enter your name">
+                  </div>
+
+                  <div class="form-group">
+                    <label for="event-start-date">Start Date</label>
+                    <input type="date" id="event-start-date" placeholder="Start date (optional)">
+                  </div>
+
+                  <div class="form-group">
+                    <label for="event-start-time">Start Time</label>
+                    <input type="time" id="event-start-time" placeholder="Start time (optional)">
+                  </div>
+
+                  <div class="form-group">
+                    <label for="event-end-date">End Date *</label>
+                    <input type="date" id="event-end-date" required>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="event-end-time">End Time *</label>
+                    <input type="time" id="event-end-time" value="23:59" required>
+                  </div>
+
+                  <div class="form-group full-width">
+                    <label for="event-members">Team Member Names</label>
+                    <input type="text" id="event-members" placeholder="Enter names separated by commas (optional)">
+                    <small style="color: #6b7280; margin-top: 4px; display: block;">Example: John Doe, Jane Smith, Mike Johnson</small>
+                  </div>
+                </div>
+
+                <div class="form-actions">
+                  <button type="submit" class="btn btn-primary" id="create-event-btn">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right: 8px;">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Create Event
+                  </button>
+                  
+                  <button type="button" class="btn btn-secondary" id="cancel-event-btn">
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- Create Idea Form -->
+        <div class="create-content" data-content="idea">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">💡 Submit New Idea</h3>
+            </div>
+            <div class="card-body">
+              <div class="form-grid" style="padding: 16px 24px; background: #f8f9fa; border-radius: 8px; margin-bottom: 16px;">
+                <label style="grid-column: 1 / -1; font-weight: 600; color: #424242; margin-bottom: 8px;">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display: inline; vertical-align: middle; margin-right: 4px;">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"/>
+                  </svg>
+                  Quick Edit: Select Existing Idea
+                </label>
+                <select class="form-select" id="idea-selector" style="grid-column: 1 / -1;">
+                  <option value="">➕ Create New Idea</option>
+                </select>
+                <small style="grid-column: 1 / -1; color: #6b7280; font-size: 0.85rem; margin-top: -8px;">
+                  💡 Select an idea above to edit it, or create a new one below
+                </small>
+              </div>
+              <form id="idea-form" class="idea-form">
+                <div class="form-grid">
+                  <div class="form-group full-width">
+                    <label for="idea-title">Idea Title *</label>
+                    <input type="text" id="idea-title" required placeholder="Enter a catchy title for your idea">
+                  </div>
+
+                  <div class="form-group full-width">
+                    <label for="idea-description">Idea Description *</label>
+                    <textarea id="idea-description" required placeholder="Describe your idea in detail..." rows="4"></textarea>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="idea-added-by">Added By *</label>
+                    <input type="text" id="idea-added-by" required placeholder="Your name" list="idea-names-list">
+                    <datalist id="idea-names-list"></datalist>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="idea-status">Status</label>
+                    <select id="idea-status">
+                      <option value="proposed">Proposed</option>
+                      <option value="under review">Under Review</option>
+                      <option value="in progress">In Progress</option>
+                      <option value="implemented">Implemented</option>
+                      <option value="archived">Archived</option>
+                    </select>
+                  </div>
+
+                  <div class="form-group full-width">
+                    <label for="idea-priority">Priority: <span id="idea-priority-value">Medium</span></label>
+                    <input type="range" id="idea-priority" min="1" max="5" value="3" class="priority-slider">
+                    <div class="priority-labels">
+                      <span class="priority-high">Urgent</span>
+                      <span class="priority-normal">Medium</span>
+                      <span class="priority-low">Minimal</span>
+                    </div>
+                  </div>
+
+                  <div class="form-group full-width">
+                    <label>Attachments (Max 3)</label>
+                    <div id="idea-attachments-container">
+                      <div class="attachment-input-group">
+                        <input type="file" id="idea-attachment-1" class="idea-attachment-input" accept="image/*,.pdf,.doc,.docx">
+                        <input type="text" id="idea-caption-1" class="idea-caption-input" placeholder="Caption (optional)">
+                      </div>
+                      <div class="attachment-input-group" style="display:none;">
+                        <input type="file" id="idea-attachment-2" class="idea-attachment-input" accept="image/*,.pdf,.doc,.docx">
+                        <input type="text" id="idea-caption-2" class="idea-caption-input" placeholder="Caption (optional)">
+                      </div>
+                      <div class="attachment-input-group" style="display:none;">
+                        <input type="file" id="idea-attachment-3" class="idea-attachment-input" accept="image/*,.pdf,.doc,.docx">
+                        <input type="text" id="idea-caption-3" class="idea-caption-input" placeholder="Caption (optional)">
+                      </div>
+                    </div>
+                    <button type="button" class="btn btn-secondary btn-small" id="add-attachment-btn" style="margin-top:8px;">+ Add Attachment</button>
+                  </div>
+                </div>
+
+                <div class="form-actions">
+                  <button type="submit" class="btn btn-primary" id="submit-idea-btn">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right: 8px;">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Submit Idea
+                  </button>
+                  <button type="button" class="btn btn-secondary" id="cancel-idea-btn">Cancel</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- AI Suggestions View -->
       <section id="ai-suggestions-view" class="view-section" style="display:none;">
         <!-- Info Banner -->
@@ -362,25 +727,7 @@
       </section>
 
       <!-- Projects Section -->
-      <section id="projects-view" class="view-section">
-        <div class="card">
-          <div class="card-header">
-            <h3 class="card-title">Create New Project</h3>
-          </div>
-          <form id="create-project-form" class="form-grid">
-            <input type="text" class="form-input" id="project-name" placeholder="Project name *" required />
-            <input type="date" class="form-input" id="project-start" placeholder="Start date" />
-            <input type="date" class="form-input" id="project-end" placeholder="End date" />
-            <textarea class="form-textarea" id="project-desc" placeholder="Project description"></textarea>
-            <button type="submit" class="btn btn-primary">
-              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-              </svg>
-              Create Project
-            </button>
-          </form>
-        </div>
-
+      <section id="projects-view" class="view-section" style="display:none;">
         <div class="card">
           <div class="card-header">
             <h3 class="card-title">All Projects</h3>
@@ -398,77 +745,6 @@
 
       <!-- Tasks Section -->
       <section id="tasks-view" class="view-section" style="display: none;">
-        <div class="card">
-          <div class="card-header">
-            <h3 class="card-title">Create New Task</h3>
-          </div>
-          <form id="create-task-form" class="form-grid">
-            <select class="form-select" id="task-project-select" required>
-              <option value="">Select Project *</option>
-            </select>
-            <input type="text" class="form-input" id="task-title" placeholder="Task title *" required />
-            <input type="text" class="form-input" id="task-assigned" placeholder="Assigned to" />
-            <input type="date" class="form-input" id="task-due" placeholder="Due date" />
-            <div class="priority-slider-container">
-              <label class="priority-label">
-                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"/>
-                </svg>
-                <span>Task Priority</span>
-              </label>
-              <div class="priority-display" id="priority-display">
-                <span class="priority-badge priority-3">🟡 Medium</span>
-              </div>
-              <input type="range" class="priority-slider" id="task-priority" min="1" max="5" value="3" step="1">
-              <div class="priority-labels">
-                <span class="priority-high">Urgent</span>
-                <span class="priority-normal">Medium</span>
-                <span class="priority-low">Minimal</span>
-              </div>
-            </div>
-            
-            <!-- Relationship Fields -->
-            <div class="relationship-container">
-              <div class="relationship-box">
-                <label class="relationship-label">
-                  <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
-                  </svg>
-                  <span>Parent Task (Subtask of)</span>
-                </label>
-                <select class="form-select relationship-select" id="task-parent-select">
-                  <option value="">None (Independent Task)</option>
-                </select>
-                <small class="relationship-help">
-                  💡 Make this task a subtask of another parent task
-                </small>
-              </div>
-              
-              <div class="relationship-box">
-                <label class="relationship-label">
-                  <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
-                  </svg>
-                  <span>Depends On Task</span>
-                </label>
-                <select class="form-select relationship-select" id="task-depends-select">
-                  <option value="">No Dependencies</option>
-                </select>
-                <small class="relationship-help">
-                  💡 Block this task until the selected task is completed
-                </small>
-              </div>
-            </div>
-            
-            <button type="submit" class="btn btn-primary">
-              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-              </svg>
-              Create Task
-            </button>
-          </form>
-        </div>
-
         <div class="card">
           <div class="card-header">
             <h3 class="card-title">All Tasks</h3>
@@ -659,148 +935,6 @@
            Shown when: User clicks "Events" in sidebar navigation
            ============================================ -->
       <section id="events-view" class="view-section" style="display:none;">
-        
-        <!-- ========================================
-             CREATE EVENT FORM CARD
-             ========================================
-             Purpose: Single form for both creating new events AND editing existing ones
-             - Initially in "create" mode
-             - Switches to "update" mode when edit button clicked on any event
-             - Form fields match database schema exactly
-             ======================================== -->
-        <div class="card">
-          <div class="card-header">
-            <h3>📅 Create New Event</h3>
-          </div>
-          <div class="card-body">
-            <!-- Form with ID for JavaScript event listener
-                 class="event-form" for styling -->
-            <form id="event-form" class="event-form">
-              <!-- Form Grid: Responsive layout that adapts to screen size
-                   Desktop: Multiple columns
-                   Mobile: Single column -->
-              <div class="form-grid">
-                <!-- ========================================
-                     REQUIRED FIELD: Event Name
-                     - Must be filled out (required attribute)
-                     - Backend validation also enforces this
-                     - Primary identifier for the event
-                     ======================================== -->
-                <div class="form-group">
-                  <label for="event-name">Event Name *</label>
-                  <input type="text" id="event-name" required placeholder="Enter event name">
-                </div>
-
-                <!-- ========================================
-                     OPTIONAL FIELD: Organisation
-                     - Name of organizing body/company
-                     - Example: "Google", "Microsoft", "IEEE"
-                     ======================================== -->
-                <div class="form-group">
-                  <label for="event-organisation">Organisation</label>
-                  <input type="text" id="event-organisation" placeholder="Enter organisation (optional)">
-                </div>
-
-                <!-- ========================================
-                     OPTIONAL FIELD: Platform
-                     - Where the event is hosted
-                     - Example: "HackerRank", "Devfolio", "Zoom"
-                     ======================================== -->
-                <div class="form-group">
-                  <label for="event-platform">Platform</label>
-                  <input type="text" id="event-platform" placeholder="Enter platform (optional)">
-                </div>
-
-                <!-- ========================================
-                     OPTIONAL FIELD: Team Size
-                     - Maximum number of members per team
-                     - type="number" ensures numeric input
-                     - min="1" prevents zero or negative values
-                     ======================================== -->
-                <div class="form-group">
-                  <label for="event-team-size">Team Size</label>
-                  <input type="number" id="event-team-size" min="1" placeholder="Enter team size (optional)">
-                </div>
-
-                <!-- ========================================
-                     OPTIONAL FIELD: Team Slots Available
-                     - How many team slots are still open
-                     - min="0" allows zero (no slots left)
-                     ======================================== -->
-                <div class="form-group">
-                  <label for="event-slots">Team Slots Available</label>
-                  <input type="number" id="event-slots" min="0" placeholder="Enter slots available (optional)">
-                </div>
-
-                <!-- ========================================
-                     REQUIRED FIELD: Added By
-                     - Name of person creating this event entry
-                     - Used for accountability/tracking
-                     ======================================== -->
-                <div class="form-group">
-                  <label for="event-added-by">Added By *</label>
-                  <input type="text" id="event-added-by" required placeholder="Enter your name">
-                </div>
-
-                <!-- ========================================
-                     REQUIRED FIELD: Event Date
-                     - When the event takes place
-                     - type="date" provides calendar picker
-                     - Stores in YYYY-MM-DD format
-                     ======================================== -->
-                <div class="form-group">
-                  <label for="event-date">Event Date *</label>
-                  <input type="date" id="event-date" required>
-                </div>
-
-                <!-- ========================================
-                     OPTIONAL FIELD: Team Member Names
-                     - Comma-separated list of names
-                     - full-width class spans all grid columns
-                     - Example helper text provided
-                     ======================================== -->
-                <div class="form-group full-width">
-                  <label for="event-members">Team Member Names</label>
-                  <input type="text" id="event-members" placeholder="Enter names separated by commas (optional)">
-                  <small style="color: #6b7280; margin-top: 4px; display: block;">Example: John Doe, Jane Smith, Mike Johnson</small>
-                </div>
-              </div>
-
-              <!-- ========================================
-                   FORM ACTION BUTTONS
-                   ========================================
-                   Two buttons with different behaviors:
-                   1. Submit button (Create/Update)
-                   2. Cancel button (Reset form)
-                   ======================================== -->
-              <div class="form-actions">
-                <!-- PRIMARY SUBMIT BUTTON
-                     - type="submit" triggers form submission
-                     - Text changes dynamically:
-                       * "Create Event" in create mode
-                       * "Update Event" in edit mode
-                     - Shows loading spinner during API call
-                     - ID used by JavaScript for event handling -->
-                <button type="submit" class="btn btn-primary" id="create-event-btn">
-                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right: 8px;">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                  </svg>
-                  Create Event
-                </button>
-                
-                <!-- CANCEL BUTTON
-                     - type="button" prevents form submission
-                     - Clears all form fields
-                     - Exits edit mode if currently editing
-                     - Returns button text to "Create Event" -->
-                <button type="button" class="btn btn-secondary" id="cancel-event-btn">
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-
         <!-- ========================================
              EVENTS LIST CARD
              ========================================
@@ -860,84 +994,6 @@
 
       <!-- Ideas Section -->
       <section id="ideas-view" class="view-section" style="display:none;">
-        <!-- Create Idea Form -->
-        <div class="card">
-          <div class="card-header">
-            <h3>💡 Submit New Idea</h3>
-          </div>
-          <div class="card-body">
-            <form id="idea-form" class="idea-form">
-              <div class="form-grid">
-                <div class="form-group full-width">
-                  <label for="idea-title">Idea Title *</label>
-                  <input type="text" id="idea-title" required placeholder="Enter a catchy title for your idea">
-                </div>
-
-                <div class="form-group full-width">
-                  <label for="idea-description">Idea Description *</label>
-                  <textarea id="idea-description" required placeholder="Describe your idea in detail..." rows="4"></textarea>
-                </div>
-
-                <div class="form-group">
-                  <label for="idea-added-by">Added By *</label>
-                  <input type="text" id="idea-added-by" required placeholder="Your name" list="idea-names-list">
-                  <datalist id="idea-names-list"></datalist>
-                </div>
-
-                <div class="form-group">
-                  <label for="idea-status">Status</label>
-                  <select id="idea-status">
-                    <option value="proposed">Proposed</option>
-                    <option value="under review">Under Review</option>
-                    <option value="in progress">In Progress</option>
-                    <option value="implemented">Implemented</option>
-                    <option value="archived">Archived</option>
-                  </select>
-                </div>
-
-                <div class="form-group full-width">
-                  <label for="idea-priority">Priority: <span id="idea-priority-value">Medium</span></label>
-                  <input type="range" id="idea-priority" min="1" max="3" value="2" class="priority-slider">
-                  <div class="priority-labels">
-                    <span>Low</span>
-                    <span>Medium</span>
-                    <span>High</span>
-                  </div>
-                </div>
-
-                <div class="form-group full-width">
-                  <label>Attachments (Max 3)</label>
-                  <div id="idea-attachments-container">
-                    <div class="attachment-input-group">
-                      <input type="file" id="idea-attachment-1" class="idea-attachment-input" accept="image/*,.pdf,.doc,.docx">
-                      <input type="text" id="idea-caption-1" class="idea-caption-input" placeholder="Caption (optional)">
-                    </div>
-                    <div class="attachment-input-group" style="display:none;">
-                      <input type="file" id="idea-attachment-2" class="idea-attachment-input" accept="image/*,.pdf,.doc,.docx">
-                      <input type="text" id="idea-caption-2" class="idea-caption-input" placeholder="Caption (optional)">
-                    </div>
-                    <div class="attachment-input-group" style="display:none;">
-                      <input type="file" id="idea-attachment-3" class="idea-attachment-input" accept="image/*,.pdf,.doc,.docx">
-                      <input type="text" id="idea-caption-3" class="idea-caption-input" placeholder="Caption (optional)">
-                    </div>
-                  </div>
-                  <button type="button" class="btn btn-secondary btn-small" id="add-attachment-btn" style="margin-top:8px;">+ Add Attachment</button>
-                </div>
-              </div>
-
-              <div class="form-actions">
-                <button type="submit" class="btn btn-primary" id="submit-idea-btn">
-                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right: 8px;">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                  </svg>
-                  Submit Idea
-                </button>
-                <button type="button" class="btn btn-secondary" id="cancel-idea-btn">Cancel</button>
-              </div>
-            </form>
-          </div>
-        </div>
-
         <!-- Ideas List -->
         <div class="card" style="margin-top: 24px;">
           <div class="card-header">

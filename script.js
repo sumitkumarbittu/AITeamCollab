@@ -181,6 +181,257 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ========================================
+  // SET UP CREATE VIEW TAB SWITCHING
+  // ========================================
+  // Handle switching between tabs in the centralized create view
+  document.querySelectorAll('.create-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      switchCreateTab(tab.dataset.tab);
+    });
+  });
+  
+  // Initialize priority sliders
+  initPrioritySlider();
+  initIdeaPrioritySlider();
+  
+  // Load projects for project selector
+  loadProjectsForSelector();
+  
+  // Load tasks for task selector
+  loadTasksForSelector();
+  
+  // Load events for event selector
+  loadEventsForSelector();
+  
+  // Load ideas for idea selector
+  loadIdeasForSelector();
+  
+  // Load organization and platform lists for events
+  loadOrganizationsAndPlatforms();
+  
+  // Set up project selector change handler
+  const projectSelector = document.getElementById('project-selector');
+  if (projectSelector) {
+    projectSelector.addEventListener('change', async (e) => {
+      const projectId = e.target.value;
+      if (projectId) {
+        // Fetch and populate project data
+        try {
+          const res = await fetch(`/api/projects/${projectId}`);
+          const project = await res.json();
+          
+          document.getElementById('project-name').value = project.name || '';
+          document.getElementById('project-start').value = project.start_date || '';
+          document.getElementById('project-end').value = project.end_date || '';
+          document.getElementById('project-desc').value = project.description || '';
+          
+          // Set edit mode
+          const form = document.getElementById('create-project-form');
+          form.dataset.editId = projectId;
+          
+          const formTitle = document.querySelector('.create-content[data-content="project"] .card-title');
+          const formButton = document.querySelector('#create-project-form button[type="submit"]');
+          
+          if (formTitle) formTitle.textContent = '📁 Edit Project';
+          if (formButton) {
+            formButton.innerHTML = `
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+              Update Project
+            `;
+          }
+        } catch (error) {
+          console.error('Error loading project:', error);
+          alert('Failed to load project details');
+        }
+      } else {
+        // Reset form for new project
+        document.getElementById('create-project-form').reset();
+        delete document.getElementById('create-project-form').dataset.editId;
+        
+        const formTitle = document.querySelector('.create-content[data-content="project"] .card-title');
+        const formButton = document.querySelector('#create-project-form button[type="submit"]');
+        
+        if (formTitle) formTitle.textContent = '📁 Create New Project';
+        if (formButton) {
+          formButton.innerHTML = `
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            Create Project
+          `;
+        }
+      }
+    });
+  }
+  
+  // Set up cancel button handlers
+  const cancelProjectBtn = document.getElementById('cancel-project-btn');
+  if (cancelProjectBtn) {
+    cancelProjectBtn.addEventListener('click', () => {
+      document.getElementById('create-project-form').reset();
+      delete document.getElementById('create-project-form').dataset.editId;
+      
+      if (projectSelector) projectSelector.value = '';
+      
+      const formTitle = document.querySelector('.create-content[data-content="project"] .card-title');
+      const formButton = document.querySelector('#create-project-form button[type="submit"]');
+      
+      if (formTitle) formTitle.textContent = '📁 Create New Project';
+      if (formButton) {
+        formButton.innerHTML = `
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+          Create Project
+        `;
+      }
+    });
+  }
+  
+  const cancelTaskBtn = document.getElementById('cancel-task-btn');
+  if (cancelTaskBtn) {
+    cancelTaskBtn.addEventListener('click', () => {
+      document.getElementById('create-task-form').reset();
+      delete document.getElementById('create-task-form').dataset.editId;
+      updatePriorityDisplay(3);
+      
+      const formTitle = document.querySelector('.create-content[data-content="task"] .card-title');
+      const formButton = document.querySelector('#create-task-form button[type="submit"]');
+      
+      if (formTitle) formTitle.textContent = '✓ Create New Task';
+      if (formButton) {
+        formButton.innerHTML = `
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+          Create Task
+        `;
+      }
+    });
+  }
+  
+  // Set up task selector change handler
+  const taskSelector = document.getElementById('task-selector');
+  if (taskSelector) {
+    taskSelector.addEventListener('change', async (e) => {
+      const taskId = e.target.value;
+      if (taskId) {
+        // Use existing editTask function
+        await editTask(taskId);
+      } else {
+        // Reset form for new task
+        document.getElementById('create-task-form').reset();
+        delete document.getElementById('create-task-form').dataset.editId;
+        updatePriorityDisplay(3);
+        
+        const formTitle = document.querySelector('.create-content[data-content="task"] .card-title');
+        const formButton = document.querySelector('#create-task-form button[type="submit"]');
+        
+        if (formTitle) formTitle.textContent = '✓ Create New Task';
+        if (formButton) {
+          formButton.innerHTML = `
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            Create Task
+          `;
+        }
+      }
+    });
+  }
+  
+  // Set up event selector change handler
+  const eventSelector = document.getElementById('event-selector');
+  if (eventSelector) {
+    eventSelector.addEventListener('change', async (e) => {
+      const eventId = e.target.value;
+      if (eventId) {
+        // Use existing editEvent function
+        await editEvent(eventId);
+      } else {
+        // Reset form for new event
+        document.getElementById('event-form').reset();
+        document.getElementById('event-end-time').value = '23:59';
+        currentEditingEventId = null;
+        
+        const formTitle = document.querySelector('.create-content[data-content="event"] .card-title');
+        const formButton = document.getElementById('create-event-btn');
+        
+        if (formTitle) formTitle.textContent = '📅 Create New Event';
+        if (formButton) {
+          formButton.innerHTML = `
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right: 8px;">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            Create Event
+          `;
+        }
+      }
+    });
+  }
+  
+  // Set up idea selector change handler
+  const ideaSelector = document.getElementById('idea-selector');
+  if (ideaSelector) {
+    ideaSelector.addEventListener('change', async (e) => {
+      const ideaId = e.target.value;
+      if (ideaId) {
+        // Use existing editIdea function
+        await editIdea(ideaId);
+      } else {
+        // Reset form for new idea
+        document.getElementById('idea-form').reset();
+        currentEditingIdeaId = null;
+        initIdeaPrioritySlider();
+        
+        const formTitle = document.querySelector('.create-content[data-content="idea"] .card-title');
+        const formButton = document.getElementById('submit-idea-btn');
+        
+        if (formTitle) formTitle.textContent = '💡 Submit New Idea';
+        if (formButton) {
+          formButton.innerHTML = `
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right: 8px;">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            Submit Idea
+          `;
+        }
+      }
+    });
+  }
+  
+  // Helper function to switch create tabs
+  window.switchCreateTab = function(tabName) {
+    // Remove active class from all tabs
+    document.querySelectorAll('.create-tab').forEach(t => t.classList.remove('active'));
+    
+    // Add active class to the target tab
+    const targetTab = document.querySelector(`.create-tab[data-tab="${tabName}"]`);
+    if (targetTab) {
+      targetTab.classList.add('active');
+    }
+    
+    // Hide all create content sections
+    document.querySelectorAll('.create-content').forEach(content => content.classList.remove('active'));
+    
+    // Show the corresponding create content
+    const targetContent = document.querySelector(`.create-content[data-content="${tabName}"]`);
+    if (targetContent) {
+      targetContent.classList.add('active');
+      console.log(`✅ CREATE TAB: Switched to ${tabName} form`);
+    }
+    
+    // Re-initialize priority sliders for the active tab
+    if (tabName === 'task') {
+      initPrioritySlider();
+    } else if (tabName === 'idea') {
+      initIdeaPrioritySlider();
+    }
+  };
+
+  // ========================================
   // LOAD INITIAL DATA
   // ========================================
   // Pre-load project data for the projects view
@@ -214,6 +465,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function getViewSubtitle(view) {
   // Object mapping view names to their subtitles
   const subtitles = {
+    create: 'Create new projects, tasks, events, and ideas',
     'ai-suggestions': 'Get AI-powered suggestions for your tasks',
     calendar: 'View and manage task deadlines',
     graph: 'Visual project and task relationships',
@@ -443,10 +695,40 @@ async function loadTasks() {
   }
 }
 
-// Priority slider functionality
-const prioritySlider = document.getElementById('task-priority');
-const priorityDisplay = document.getElementById('priority-display');
+// ========================================
+// TIMEZONE HELPER - Convert to IST
+// ========================================
+function toIST(dateString) {
+  // If already an IST formatted string, return as is
+  if (typeof dateString === 'string' && dateString.includes('IST')) {
+    return dateString;
+  }
+  
+  try {
+    const date = new Date(dateString);
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      console.warn('Invalid date:', dateString);
+      return String(dateString);
+    }
+    return date.toLocaleString('en-IN', {
+      timeZone: 'Asia/Kolkata',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+  } catch (error) {
+    console.error('Error converting to IST:', error, dateString);
+    return String(dateString);
+  }
+}
 
+// ========================================
+// PRIORITY SLIDER FUNCTIONALITY
+// ========================================
 function updatePriorityDisplay(value) {
   const priorityNames = {
     1: '🔴 Urgent',
@@ -456,18 +738,23 @@ function updatePriorityDisplay(value) {
     5: '⚪ Minimal'
   };
   
+  const priorityDisplay = document.getElementById('priority-display');
   if (priorityDisplay) {
     priorityDisplay.innerHTML = `<span class="priority-badge priority-${value}">${priorityNames[value]}</span>`;
   }
 }
 
-if (prioritySlider) {
-  prioritySlider.addEventListener('input', (e) => {
-    updatePriorityDisplay(e.target.value);
-  });
-  
-  // Initialize display
-  updatePriorityDisplay(prioritySlider.value);
+// Initialize priority slider (will be called after DOM loads)
+function initPrioritySlider() {
+  const prioritySlider = document.getElementById('task-priority');
+  if (prioritySlider) {
+    prioritySlider.addEventListener('input', (e) => {
+      updatePriorityDisplay(e.target.value);
+    });
+    
+    // Initialize display
+    updatePriorityDisplay(prioritySlider.value);
+  }
 }
 
 // Form handlers
@@ -498,9 +785,9 @@ document.getElementById('create-project-form').addEventListener('submit', async 
       delete form.dataset.editId;
       
       // Reset form title and button
-      const formTitle = document.querySelector('#projects-view .card-title');
+      const formTitle = document.querySelector('.create-content[data-content="project"] .card-title');
       const formButton = form.querySelector('button[type="submit"]');
-      if (formTitle) formTitle.textContent = 'Create New Project';
+      if (formTitle) formTitle.textContent = '📁 Create New Project';
       if (formButton) {
         formButton.innerHTML = `
           <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -513,6 +800,7 @@ document.getElementById('create-project-form').addEventListener('submit', async 
       loadProjects();
       // Refresh activity widget immediately
       refreshActivityLog();
+      alert(editId ? '✅ Project updated successfully!' : '✅ Project created successfully!');
     } else {
       alert(editId ? 'Failed to update project' : 'Failed to create project');
     }
@@ -555,9 +843,9 @@ document.getElementById('create-task-form').addEventListener('submit', async (e)
       delete form.dataset.editId;
       
       // Reset form title and button
-      const formTitle = document.querySelector('#tasks-view .card-title');
+      const formTitle = document.querySelector('.create-content[data-content="task"] .card-title');
       const formButton = form.querySelector('button[type="submit"]');
-      if (formTitle) formTitle.textContent = 'Create New Task';
+      if (formTitle) formTitle.textContent = '✓ Create New Task';
       if (formButton) {
         formButton.innerHTML = `
           <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -567,9 +855,13 @@ document.getElementById('create-task-form').addEventListener('submit', async (e)
         `;
       }
       
+      // Reset priority display
+      updatePriorityDisplay(3);
+      
       loadTasks();
       // Refresh activity widget immediately
       refreshActivityLog();
+      alert(editId ? '✅ Task updated successfully!' : '✅ Task created successfully!');
     } else {
       alert(editId ? 'Failed to update task' : 'Failed to create task');
     }
@@ -578,6 +870,117 @@ document.getElementById('create-task-form').addEventListener('submit', async (e)
     alert('Failed to save task');
   }
 });
+
+// Load projects for selector dropdown
+async function loadProjectsForSelector() {
+  try {
+    const res = await fetch('/api/projects');
+    const projects = await res.json();
+    
+    const projectSelector = document.getElementById('project-selector');
+    if (projectSelector) {
+      // Keep the "Create New" option and add all projects
+      let options = '<option value="">➕ Create New Project</option>';
+      projects.forEach(p => {
+        options += `<option value="${p.id}">${p.name}</option>`;
+      });
+      projectSelector.innerHTML = options;
+    }
+  } catch (error) {
+    console.error('Error loading projects for selector:', error);
+  }
+}
+
+// Load tasks for selector dropdown
+async function loadTasksForSelector() {
+  try {
+    const res = await fetch('/api/tasks');
+    const tasks = await res.json();
+    
+    const taskSelector = document.getElementById('task-selector');
+    if (taskSelector) {
+      let options = '<option value="">➕ Create New Task</option>';
+      tasks.forEach(t => {
+        const statusBadge = t.status === 'done' ? '✅' : t.status === 'in_progress' ? '🔄' : '📝';
+        options += `<option value="${t.id}">${statusBadge} ${t.title}</option>`;
+      });
+      taskSelector.innerHTML = options;
+    }
+  } catch (error) {
+    console.error('Error loading tasks for selector:', error);
+  }
+}
+
+// Load events for selector dropdown
+async function loadEventsForSelector() {
+  try {
+    const res = await fetch('/api/events');
+    const events = await res.json();
+    
+    const eventSelector = document.getElementById('event-selector');
+    if (eventSelector) {
+      let options = '<option value="">➕ Create New Event</option>';
+      events.forEach(e => {
+        const dateStr = e.end_date ? new Date(e.end_date).toLocaleDateString() : 'No date';
+        options += `<option value="${e.id}">${e.event_name} (${dateStr})</option>`;
+      });
+      eventSelector.innerHTML = options;
+    }
+  } catch (error) {
+    console.error('Error loading events for selector:', error);
+  }
+}
+
+// Load ideas for selector dropdown
+async function loadIdeasForSelector() {
+  try {
+    const res = await fetch('/api/ideas');
+    const ideas = await res.json();
+    
+    const ideaSelector = document.getElementById('idea-selector');
+    if (ideaSelector) {
+      let options = '<option value="">➕ Create New Idea</option>';
+      ideas.forEach(i => {
+        const statusBadge = i.status === 'implemented' ? '✅' : i.status === 'in progress' ? '🔄' : '💡';
+        options += `<option value="${i.id}">${statusBadge} ${i.idea_title}</option>`;
+      });
+      ideaSelector.innerHTML = options;
+    }
+  } catch (error) {
+    console.error('Error loading ideas for selector:', error);
+  }
+}
+
+// Load organizations and platforms for datalists
+async function loadOrganizationsAndPlatforms() {
+  try {
+    const res = await fetch('/api/events');
+    const events = await res.json();
+    
+    // Extract unique organizations and platforms
+    const organizations = new Set();
+    const platforms = new Set();
+    
+    events.forEach(e => {
+      if (e.organisation) organizations.add(e.organisation);
+      if (e.platform) platforms.add(e.platform);
+    });
+    
+    // Populate organization datalist
+    const orgList = document.getElementById('organisation-list');
+    if (orgList) {
+      orgList.innerHTML = Array.from(organizations).map(org => `<option value="${org}">`).join('');
+    }
+    
+    // Populate platform datalist
+    const platformList = document.getElementById('platform-list');
+    if (platformList) {
+      platformList.innerHTML = Array.from(platforms).map(plat => `<option value="${plat}">`).join('');
+    }
+  } catch (error) {
+    console.error('Error loading organizations and platforms:', error);
+  }
+}
 
 // Task management
 async function loadTasksForSelect() {
@@ -722,7 +1125,7 @@ async function loadAttachments() {
             <button class="btn btn-sm btn-danger" onclick="deleteAttachment(${att.id})">Delete</button>
           </div>
         </div>
-        <div class="item-meta">Project: ${att.project_name || 'Unknown Project'} | Task: ${att.task_title || 'Unknown Task'} | Uploaded by: ${att.uploaded_by || '—'} | At: ${new Date(att.uploaded_at).toLocaleString()}</div>
+        <div class="item-meta">Project: ${att.project_name || 'Unknown Project'} | Task: ${att.task_title || 'Unknown Task'} | Uploaded by: ${att.uploaded_by || '—'} | At: ${toIST(att.uploaded_at)}</div>
       `;
       list.appendChild(div);
     });
@@ -845,7 +1248,11 @@ function getRelativeTime(timestamp) {
   if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
   if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
   if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
-  return time.toLocaleDateString();
+  // Backend returns IST formatted string, just extract date part
+  if (typeof timestamp === 'string' && timestamp.includes('IST')) {
+    return timestamp.split(' ')[0]; // Return date part of IST string
+  }
+  return toIST(timestamp).split(',')[0];
 }
 
 // Helper function to get action icon and color
@@ -988,7 +1395,7 @@ function renderActivityWidget() {
     const actionDetails = getActionDetails(log.action_type);
     const objectDetails = formatObjectType(log.object_type);
     const relativeTime = getRelativeTime(log.timestamp);
-    const fullTime = new Date(log.timestamp).toLocaleString();
+    const fullTime = toIST(log.timestamp);
     
     // Fetch additional details for comprehensive display
     const metadataHTML = buildActivityMetadata(log);
@@ -1546,7 +1953,7 @@ async function fetchMessages() {
             <div class="message-content">
               <div class="message-header">
                 <strong>${m.name}</strong>
-                <span class="time">${m.time}</span>
+                <span class="time">${m.timestamp || m.time}</span>
               </div>
               <div class="message-text">${m.message}</div>
             </div>
@@ -2676,23 +3083,21 @@ async function loadCalendar() {
             
             const events = filteredTasks.map(t => ({
               id: t.id,
-              title: `${t.title}${t.assigned_to ? ` — ${t.assigned_to}` : ''}`,
+              title: t.title,
               start: t.due_date,
-              backgroundColor: getTaskColor(t.status),
-              borderColor: getBorderColor(t.status),
-              textColor: '#ffffff',
+              backgroundColor: t.status === 'done' ? '#10b981' : t.status === 'in_progress' ? '#3b82f6' : '#6b7280',
+              borderColor: t.status === 'done' ? '#059669' : t.status === 'in_progress' ? '#2563eb' : '#4b5563',
               extendedProps: {
                 status: t.status,
-                assigned_to: t.assigned_to,
                 priority: t.priority,
+                assigned_to: t.assigned_to,
                 project_id: t.project_id
               }
             }));
-
-            console.log(`📅 CALENDAR: Loaded ${events.length} events (filtered from ${tasks.length})`);
+            
+            console.log(`✅ CALENDAR: Loaded ${events.length} events`);
             successCallback(events);
           } else {
-            console.error('❌ CALENDAR: Failed to fetch tasks');
             failureCallback(new Error('Failed to fetch tasks'));
           }
         } catch (err) {
@@ -3050,7 +3455,7 @@ async function showTaskAISuggestions(taskId) {
     const urgencyColor = urgencyColors[data.urgency] || '#4CAF50';
     
     // Format timestamp
-    const timestamp = data.generated_at ? new Date(data.generated_at).toLocaleString() : '';
+    const timestamp = data.generated_at ? toIST(data.generated_at) : '';
     
     // Build enhanced display
     box.innerHTML = `
@@ -3106,31 +3511,42 @@ function formatAISuggestions(text) {
 
 // ========== Edit Project Function ==========
 window.editProject = async function(projectId, name, startDate, endDate, description) {
-  // Scroll to form
-  document.getElementById('projects-view').scrollIntoView({ behavior: 'smooth' });
+  showView('create');
+  switchCreateTab('project');
   
-  // Populate form fields
-  document.getElementById('project-name').value = name || '';
-  document.getElementById('project-start').value = startDate || '';
-  document.getElementById('project-end').value = endDate || '';
-  document.getElementById('project-desc').value = description || '';
-  
-  // Change form title and button
-  const formTitle = document.querySelector('#projects-view .card-title');
-  const formButton = document.querySelector('#create-project-form button[type="submit"]');
-  
-  if (formTitle) formTitle.textContent = '✏️ Edit Project';
-  if (formButton) {
-    formButton.innerHTML = `
-      <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-      </svg>
-      Update Project
-    `;
+  // Update project selector to show current project
+  const projectSelector = document.getElementById('project-selector');
+  if (projectSelector) {
+    projectSelector.value = projectId;
   }
   
-  // Store project ID for update
-  document.getElementById('create-project-form').dataset.editId = projectId;
+  setTimeout(() => {
+    // Populate form fields
+    document.getElementById('project-name').value = name || '';
+    document.getElementById('project-start').value = startDate || '';
+    document.getElementById('project-end').value = endDate || '';
+    document.getElementById('project-desc').value = description || '';
+    
+    // Change form title and button
+    const formTitle = document.querySelector('.create-content[data-content="project"] .card-title');
+    const formButton = document.querySelector('#create-project-form button[type="submit"]');
+    
+    if (formTitle) formTitle.textContent = '📁 Edit Project';
+    if (formButton) {
+      formButton.innerHTML = `
+        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+        </svg>
+        Update Project
+      `;
+    }
+    
+    // Store project ID for update
+    document.getElementById('create-project-form').dataset.editId = projectId;
+    
+    // Scroll to form
+    document.getElementById('create-view').scrollIntoView({ behavior: 'smooth' });
+  }, 100);
 }
 
 // ========== Edit Task Function ==========
@@ -3140,37 +3556,52 @@ window.editTask = async function(taskId) {
     const res = await fetch(`/api/tasks/${taskId}`);
     const task = await res.json();
     
-    // Scroll to form
-    document.getElementById('tasks-view').scrollIntoView({ behavior: 'smooth' });
+    // Navigate to create view
+    showView('create');
     
-    // Populate form fields
-    document.getElementById('task-project-select').value = task.project_id || '';
-    document.getElementById('task-title').value = task.title || '';
-    document.getElementById('task-assigned').value = task.assigned_to || '';
-    document.getElementById('task-due').value = task.due_date || '';
-    document.getElementById('task-priority').value = task.priority || 3;
-    document.getElementById('task-parent-select').value = task.parent_task_id || '';
-    document.getElementById('task-depends-select').value = task.depends_on_task_id || '';
+    // Switch to task tab
+    switchCreateTab('task');
     
-    // Update priority slider display
-    updatePriorityDisplay(task.priority || 3);
-    
-    // Change form title and button
-    const formTitle = document.querySelector('#tasks-view .card-title');
-    const formButton = document.querySelector('#create-task-form button[type="submit"]');
-    
-    if (formTitle) formTitle.textContent = '✏️ Edit Task';
-    if (formButton) {
-      formButton.innerHTML = `
-        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-        </svg>
-        Update Task
-      `;
+    // Update task selector to show current task
+    const taskSelector = document.getElementById('task-selector');
+    if (taskSelector) {
+      taskSelector.value = taskId;
     }
     
-    // Store task ID for update
-    document.getElementById('create-task-form').dataset.editId = taskId;
+    // Small delay to ensure DOM is ready
+    setTimeout(() => {
+      // Populate form fields
+      document.getElementById('task-project-select').value = task.project_id || '';
+      document.getElementById('task-title').value = task.title || '';
+      document.getElementById('task-assigned').value = task.assigned_to || '';
+      document.getElementById('task-due').value = task.due_date || '';
+      document.getElementById('task-priority').value = task.priority || 3;
+      document.getElementById('task-parent-select').value = task.parent_task_id || '';
+      document.getElementById('task-depends-select').value = task.depends_on_task_id || '';
+      
+      // Update priority slider display
+      updatePriorityDisplay(task.priority || 3);
+      
+      // Change form title and button
+      const formTitle = document.querySelector('.create-content[data-content="task"] .card-title');
+      const formButton = document.querySelector('#create-task-form button[type="submit"]');
+      
+      if (formTitle) formTitle.textContent = '✓ Edit Task';
+      if (formButton) {
+        formButton.innerHTML = `
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+          Update Task
+        `;
+      }
+      
+      // Store task ID for update
+      document.getElementById('create-task-form').dataset.editId = taskId;
+      
+      // Scroll to form
+      document.getElementById('create-view').scrollIntoView({ behavior: 'smooth' });
+    }, 100);
   } catch (error) {
     console.error('Error fetching task:', error);
     alert('Failed to load task details');
@@ -3547,7 +3978,11 @@ function formatAlertTime(timeStr) {
   if (diffMins < 60) return `${diffMins}m ago`;
   if (diffHours < 24) return `${diffHours}h ago`;
   if (diffDays < 7) return `${diffDays}d ago`;
-  return date.toLocaleDateString();
+  // Check if date is already IST formatted string
+  if (typeof date === 'string' && date.includes('IST')) {
+    return date.split(' ')[0]; // Return date part
+  }
+  return toIST(date).split(',')[0];
 }
 
 // Global function to dismiss alert
@@ -3823,16 +4258,47 @@ async function loadEvents() {
  */
 function renderEventCard(event) {
   // ========================================
-  // FORMAT EVENT DATE
+  // FORMAT DATE AND TIME HELPERS
   // ========================================
-  // Convert ISO date string to human-readable format
-  // Example: "2025-01-15" → "Tue, Jan 15, 2025"
-  const eventDate = event.event_date ? new Date(event.event_date).toLocaleDateString('en-US', {
-    weekday: 'short',  // "Tue"
-    year: 'numeric',   // "2025"
-    month: 'short',    // "Jan"
-    day: 'numeric'     // "15"
-  }) : 'No date';
+  // Format a date string to a readable format (e.g., "Jan 15, 2025")
+  const formatDate = (dateStr) => {
+    if (!dateStr) return 'TBD';
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
+  // Format time string (e.g., "13:30" -> "1:30 PM")
+  const formatTime = (timeStr) => {
+    if (!timeStr) return '';
+    const [hours, minutes] = timeStr.split(':');
+    const date = new Date();
+    date.setHours(parseInt(hours, 10), parseInt(minutes, 10));
+    return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  };
+
+  // Format date and time range
+  const formatDateTimeRange = () => {
+    const startDate = event.start_date || event.event_date;
+    const endDate = event.end_date || event.event_date;
+    const startTime = event.start_time || '00:00';
+    const endTime = event.end_time || '23:59';
+
+    if (!startDate && !endDate) return 'No dates specified';
+
+    const startDateStr = formatDate(startDate);
+    const endDateStr = formatDate(endDate);
+    const startTimeStr = formatTime(startTime);
+    const endTimeStr = formatTime(endTime);
+
+    if (startDate === endDate) {
+      if (startTime === '00:00' && endTime === '23:59') {
+        return `${startDateStr} (All day)`;
+      }
+      return `${startDateStr} • ${startTimeStr} - ${endTimeStr}`;
+    }
+
+    return `${startDateStr} ${startTimeStr} -<br>${endDateStr} ${endTimeStr}`;
+  };
   
   // ========================================
   // PROCESS TEAM MEMBERS STRING
@@ -3848,6 +4314,9 @@ function renderEventCard(event) {
   const membersDisplay = teamMembers.length > 0 
     ? teamMembers.slice(0, 3).join(', ') + (teamMembers.length > 3 ? ` +${teamMembers.length - 3} more` : '')
     : 'No team members';
+    
+  // Format date range for display
+  const dateTimeDisplay = formatDateTimeRange();
   
   // ========================================
   // BUILD HTML TEMPLATE
@@ -3873,7 +4342,7 @@ function renderEventCard(event) {
             <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
             </svg>
-            ${eventDate}
+            <span class="date-range">${dateTimeDisplay}</span>
           </div>
         </div>
         <div class="event-actions">
@@ -3971,7 +4440,10 @@ document.getElementById('event-form')?.addEventListener('submit', async (e) => {
     team_size: document.getElementById('event-team-size').value ? parseInt(document.getElementById('event-team-size').value) : null,
     team_slots_available: document.getElementById('event-slots').value ? parseInt(document.getElementById('event-slots').value) : null,
     added_by: document.getElementById('event-added-by').value.trim(),
-    event_date: document.getElementById('event-date').value,
+    start_date: document.getElementById('event-start-date').value || null,
+    start_time: document.getElementById('event-start-time').value || null,
+    end_date: document.getElementById('event-end-date').value || null,
+    end_time: document.getElementById('event-end-time').value || null,
     team_members: document.getElementById('event-members').value.trim() || null
   };
   
@@ -4029,22 +4501,31 @@ document.getElementById('event-form')?.addEventListener('submit', async (e) => {
     // ========================================
     // SUCCESS HANDLING
     // ========================================
+    // Store editing state before resetting
+    const wasEditing = currentEditingEventId !== null;
+    
     // Reset the form to clear all inputs
     document.getElementById('event-form').reset();
     
     // Clear the editing state (back to create mode)
     currentEditingEventId = null;
     
-    // Restore original button text
-    createBtn.innerHTML = originalBtnText;
+    // Reset form title and button
+    const formTitle = document.querySelector('.create-content[data-content="event"] .card-title');
+    if (formTitle) formTitle.textContent = '📅 Create New Event';
+    
+    createBtn.innerHTML = `
+      <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right: 8px;">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+      </svg>
+      Create Event
+    `;
     
     // Reload the events list to show the new/updated event
     await loadEvents();
     
     // Show success notification to user
-    // Note: currentEditingEventId will always be null here due to line above
-    // This is a bug - should check before setting to null
-    showNotification(currentEditingEventId ? '✅ Event updated successfully!' : '✅ Event created successfully!', 'success');
+    showNotification(wasEditing ? '✅ Event updated successfully!' : '✅ Event created successfully!', 'success');
     
   } catch (error) {
     // ========================================
@@ -4124,31 +4605,57 @@ window.editEvent = async function(eventId) {
     const response = await fetch(`/api/events/${eventId}`);
     const event = await response.json();
     
-    // ========================================
-    // POPULATE FORM FIELDS
-    // ========================================
-    // Fill each input with existing event data
-    // || '' provides empty string fallback if value is null
-    document.getElementById('event-name').value = event.event_name || '';
-    document.getElementById('event-organisation').value = event.organisation || '';
-    document.getElementById('event-platform').value = event.platform || '';
-    document.getElementById('event-team-size').value = event.team_size || '';
-    document.getElementById('event-slots').value = event.team_slots_available || '';
-    document.getElementById('event-added-by').value = event.added_by || '';
-    document.getElementById('event-date').value = event.event_date || '';
-    document.getElementById('event-members').value = event.team_members || '';
+    // Navigate to create view
+    showView('create');
     
-    // Update form state
-    currentEditingEventId = eventId;
-    document.getElementById('create-event-btn').innerHTML = `
-      <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right: 8px;">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-      </svg>
-      Update Event
-    `;
+    // Switch to event tab
+    switchCreateTab('event');
     
-    // Scroll to form
-    document.getElementById('event-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // Update event selector to show current event
+    const eventSelector = document.getElementById('event-selector');
+    if (eventSelector) {
+      eventSelector.value = eventId;
+    }
+    
+    // Small delay to ensure DOM is ready
+    setTimeout(() => {
+      // ========================================
+      // POPULATE FORM FIELDS
+      // ========================================
+      // Fill each input with existing event data
+      // || '' provides empty string fallback if value is null
+      document.getElementById('event-name').value = event.event_name || '';
+      document.getElementById('event-organisation').value = event.organisation || '';
+      document.getElementById('event-platform').value = event.platform || '';
+      document.getElementById('event-team-size').value = event.team_size || '';
+      document.getElementById('event-slots').value = event.team_slots_available || '';
+      document.getElementById('event-added-by').value = event.added_by || '';
+      document.getElementById('event-start-date').value = event.start_date || event.event_date || '';
+      document.getElementById('event-start-time').value = event.start_time || '';
+      document.getElementById('event-end-date').value = event.end_date || event.event_date || '';
+      document.getElementById('event-end-time').value = event.end_time || '23:59';
+      document.getElementById('event-members').value = event.team_members || '';
+      
+      // Update form state
+      currentEditingEventId = eventId;
+      
+      // Change form title and button
+      const formTitle = document.querySelector('.create-content[data-content="event"] .card-title');
+      const formButton = document.getElementById('create-event-btn');
+      
+      if (formTitle) formTitle.textContent = '📅 Edit Event';
+      if (formButton) {
+        formButton.innerHTML = `
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right: 8px;">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+          Update Event
+        `;
+      }
+      
+      // Scroll to form
+      document.getElementById('create-view').scrollIntoView({ behavior: 'smooth' });
+    }, 100);
     
   } catch (error) {
     console.error('❌ Error loading event:', error);
@@ -4341,11 +4848,7 @@ function updateNameDatalist() {
 
 // Render a single idea card
 function renderIdeaCard(idea) {
-  const createdDate = idea.created_at ? new Date(idea.created_at).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric'
-  }) : 'Unknown date';
+  const createdDate = idea.created_at ? toIST(idea.created_at).split(',')[0] : 'Unknown date';
   
   const likesArray = idea.likes ? idea.likes.split(',').filter(n => n.trim()) : [];
   const likesCount = likesArray.length;
@@ -4447,7 +4950,7 @@ function renderIdeaCard(idea) {
                 <div class="comment">
                   <strong>${comment.name}</strong>
                   <p>${comment.text}</p>
-                  <small>${new Date(comment.timestamp).toLocaleString()}</small>
+                  <small>${toIST(comment.timestamp)}</small>
                 </div>
               `).join('') : 
               '<p class="no-comments">No comments yet</p>'
@@ -4588,7 +5091,7 @@ document.getElementById('idea-form')?.addEventListener('submit', async (e) => {
   }
   
   const priorityValue = document.getElementById('idea-priority').value;
-  const priorityMap = { '1': 'low', '2': 'medium', '3': 'high' };
+  const priorityMap = { '1': 'urgent', '2': 'high', '3': 'medium', '4': 'low', '5': 'minimal' };
   
   const ideaData = {
     idea_title: document.getElementById('idea-title').value.trim(),
@@ -4638,14 +5141,28 @@ document.getElementById('idea-form')?.addEventListener('submit', async (e) => {
       throw new Error(error.error || 'Failed to save idea');
     }
     
+    // Store editing state before resetting
+    const wasEditing = currentEditingIdeaId !== null;
+    
     document.getElementById('idea-form').reset();
     currentEditingIdeaId = null;
-    submitBtn.innerHTML = originalBtnText;
+    
+    // Reset form title and button
+    const formTitle = document.querySelector('.create-content[data-content="idea"] .card-title');
+    if (formTitle) formTitle.textContent = '💡 Submit New Idea';
+    
+    submitBtn.innerHTML = `
+      <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right: 8px;">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+      </svg>
+      Submit Idea
+    `;
+    
     document.getElementById('idea-priority-value').textContent = 'Medium';
     resetAttachments();
     await loadIdeas();
     
-    showNotification(currentEditingIdeaId ? '✅ Idea updated!' : '✅ Idea submitted!', 'success');
+    showNotification(wasEditing ? '✅ Idea updated successfully!' : '✅ Idea submitted successfully!', 'success');
     
   } catch (error) {
     console.error('❌ Error saving idea:', error);
@@ -4656,10 +5173,33 @@ document.getElementById('idea-form')?.addEventListener('submit', async (e) => {
   }
 });
 
+// Initialize idea priority slider
+function initIdeaPrioritySlider() {
+  const ideaPrioritySlider = document.getElementById('idea-priority');
+  const ideaPriorityValue = document.getElementById('idea-priority-value');
+  
+  if (ideaPrioritySlider && ideaPriorityValue) {
+    // Remove existing event listeners by replacing the element
+    const newSlider = ideaPrioritySlider.cloneNode(true);
+    ideaPrioritySlider.parentNode.replaceChild(newSlider, ideaPrioritySlider);
+    
+    newSlider.addEventListener('input', (e) => {
+      const value = e.target.value;
+      const labels = ['🔴 Urgent', '🟠 High', '🟡 Medium', '🔵 Low', '⚪ Minimal'];
+      document.getElementById('idea-priority-value').textContent = labels[value - 1];
+    });
+    
+    // Initialize display
+    const value = newSlider.value;
+    const labels = ['🔴 Urgent', '🟠 High', '🟡 Medium', '🔵 Low', '⚪ Minimal'];
+    ideaPriorityValue.textContent = labels[value - 1];
+  }
+}
+
 // Priority slider handler
 document.getElementById('idea-priority')?.addEventListener('input', (e) => {
   const value = e.target.value;
-  const labels = ['Low', 'Medium', 'High'];
+  const labels = ['🔴 Urgent', '🟠 High', '🟡 Medium', '🔵 Low', '⚪ Minimal'];
   document.getElementById('idea-priority-value').textContent = labels[value - 1];
 });
 
@@ -4706,25 +5246,51 @@ window.editIdea = async function(ideaId) {
     const response = await fetch(`/api/ideas/${ideaId}`);
     const idea = await response.json();
     
-    document.getElementById('idea-title').value = idea.idea_title || '';
-    document.getElementById('idea-description').value = idea.idea_description || '';
-    document.getElementById('idea-added-by').value = idea.added_by || '';
-    document.getElementById('idea-status').value = idea.status || 'proposed';
+    // Navigate to create view
+    showView('create');
     
-    const priorityMap = { 'low': '1', 'medium': '2', 'high': '3' };
-    const priorityValue = priorityMap[idea.priority] || '2';
-    document.getElementById('idea-priority').value = priorityValue;
-    document.getElementById('idea-priority-value').textContent = idea.priority.charAt(0).toUpperCase() + idea.priority.slice(1);
+    // Switch to idea tab
+    switchCreateTab('idea');
     
-    currentEditingIdeaId = ideaId;
-    document.getElementById('submit-idea-btn').innerHTML = `
-      <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right: 8px;">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-      </svg>
-      Update Idea
-    `;
+    // Update idea selector to show current idea
+    const ideaSelector = document.getElementById('idea-selector');
+    if (ideaSelector) {
+      ideaSelector.value = ideaId;
+    }
     
-    document.getElementById('idea-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // Small delay to ensure DOM is ready
+    setTimeout(() => {
+      document.getElementById('idea-title').value = idea.idea_title || '';
+      document.getElementById('idea-description').value = idea.idea_description || '';
+      document.getElementById('idea-added-by').value = idea.added_by || '';
+      document.getElementById('idea-status').value = idea.status || 'proposed';
+      
+      const priorityMap = { 'urgent': '1', 'high': '2', 'medium': '3', 'low': '4', 'minimal': '5' };
+      const priorityValue = priorityMap[idea.priority] || '3';
+      document.getElementById('idea-priority').value = priorityValue;
+      
+      const priorityLabels = { '1': '🔴 Urgent', '2': '🟠 High', '3': '🟡 Medium', '4': '🔵 Low', '5': '⚪ Minimal' };
+      document.getElementById('idea-priority-value').textContent = priorityLabels[priorityValue] || '🟡 Medium';
+      
+      currentEditingIdeaId = ideaId;
+      
+      // Change form title and button
+      const formTitle = document.querySelector('.create-content[data-content="idea"] .card-title');
+      const formButton = document.getElementById('submit-idea-btn');
+      
+      if (formTitle) formTitle.textContent = '💡 Edit Idea';
+      if (formButton) {
+        formButton.innerHTML = `
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right: 8px;">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+          Update Idea
+        `;
+      }
+      
+      // Scroll to form
+      document.getElementById('create-view').scrollIntoView({ behavior: 'smooth' });
+    }, 100);
     
   } catch (error) {
     console.error('❌ Error loading idea:', error);

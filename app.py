@@ -55,7 +55,8 @@
 import os  # Operating system interface for environment variables and file operations
 import io  # Core tools for working with streams (used for file handling)
 import json  # JSON encoding and decoding for API data serialization
-from datetime import datetime  # Date and time manipulation
+from datetime import datetime, timezone  # Date and time manipulation
+from zoneinfo import ZoneInfo  # Timezone support (Python 3.9+)
 
 # Flask framework imports
 from flask import Flask, request, jsonify, send_file, send_from_directory
@@ -80,6 +81,38 @@ import logging  # Python's built-in logging framework for debugging
 import requests  # HTTP library for making external API calls (used for AI features)
 import psycopg2  # PostgreSQL database adapter
 import psycopg2.extras  # Additional psycopg2 utilities
+
+# ============================================
+# TIMEZONE UTILITY FUNCTIONS
+# ============================================
+
+def to_ist(dt):
+    """
+    Convert a datetime object to Indian Standard Time (IST)
+    
+    Args:
+        dt: datetime object (can be naive or timezone-aware)
+    
+    Returns:
+        datetime object in IST timezone or formatted string
+    """
+    if dt is None:
+        return None
+    
+    try:
+        # If datetime is naive (no timezone), assume it's UTC
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        
+        # Convert to IST (Asia/Kolkata)
+        ist_tz = ZoneInfo('Asia/Kolkata')
+        dt_ist = dt.astimezone(ist_tz)
+        
+        # Return formatted string
+        return dt_ist.strftime('%Y-%m-%d %H:%M:%S IST')
+    except Exception as e:
+        logging.error(f"Error converting to IST: {e}")
+        return str(dt) if dt else None
 
 
 # ============================================
@@ -388,11 +421,16 @@ def init_db():
         team_size INTEGER,
         team_slots_available INTEGER,
         added_by TEXT NOT NULL,
-        event_date DATE NOT NULL,
+        event_date DATE,
+        start_date DATE,
+        start_time TIME,
+        end_date DATE NOT NULL,
+        end_time TIME NOT NULL,
         team_members TEXT,
         created_at TIMESTAMP DEFAULT now(),
         updated_at TIMESTAMP DEFAULT now()
     );
+    """)
     
     # ========================================
     # TABLE 6: IDEAS
@@ -432,6 +470,7 @@ def init_db():
     # and avoids complex joins for simple social features. This is
     # acceptable since these are not core business entities requiring
     # complex queries or indexing.
+    cur.execute("""
     CREATE TABLE IF NOT EXISTS ideas (
         id SERIAL PRIMARY KEY,
         idea_title TEXT NOT NULL,
@@ -1224,7 +1263,7 @@ def get_activity_logs():
                 "action_type": r['action_type'],
                 "object_type": r['object_type'],
                 "object_id": r['object_id'],
-                "timestamp": r['timestamp'].isoformat() if r['timestamp'] else None,
+                "timestamp": to_ist(r['timestamp']),
                 "user_id": r['user_id']
             }
             
@@ -1342,10 +1381,10 @@ def list_events():
         # ORDER BY event_date DESC ensures most recent/upcoming events appear first
         cur.execute("""
             SELECT id, event_name, organisation, platform, team_size, 
-                   team_slots_available, added_by, event_date, team_members,
-                   created_at, updated_at
+                   team_slots_available, added_by, event_date, start_date, start_time,
+                   end_date, end_time, team_members, created_at, updated_at
             FROM events
-            ORDER BY event_date DESC
+            ORDER BY COALESCE(end_date, event_date, start_date) DESC
         """)
         
         # Fetch all rows from the query result
@@ -1368,6 +1407,10 @@ def list_events():
                 'added_by': r['added_by'],
                 # Convert date objects to ISO format strings for JSON serialization
                 'event_date': r['event_date'].isoformat() if r['event_date'] else None,
+                'start_date': r['start_date'].isoformat() if r['start_date'] else None,
+                'start_time': str(r['start_time']) if r['start_time'] else None,
+                'end_date': r['end_date'].isoformat() if r['end_date'] else None,
+                'end_time': str(r['end_time']) if r['end_time'] else None,
                 'team_members': r['team_members'],
                 # Convert timestamp objects to ISO format strings
                 'created_at': r['created_at'].isoformat() if r['created_at'] else None,
@@ -1428,9 +1471,13 @@ def create_event():
         if not data.get('added_by'):
             return jsonify({"error": "Added by is required"}), 400
         
-        # event_date is required - every event must have a date
-        if not data.get('event_date'):
-            return jsonify({"error": "Event date is required"}), 400
+        # end_date is required - every event must have an end date
+        if not data.get('end_date'):
+            return jsonify({"error": "End date is required"}), 400
+        
+        # end_time is required - every event must have an end time
+        if not data.get('end_time'):
+            return jsonify({"error": "End time is required"}), 400
         
         # ========================================
         # DATABASE INSERT
@@ -1442,20 +1489,25 @@ def create_event():
         # This is more efficient than doing INSERT then SELECT
         cur.execute("""
             INSERT INTO events (event_name, organisation, platform, team_size, 
-                               team_slots_available, added_by, event_date, team_members)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                               team_slots_available, added_by, event_date, start_date,
+                               start_time, end_date, end_time, team_members)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING id, event_name, organisation, platform, team_size, 
-                      team_slots_available, added_by, event_date, team_members,
-                      created_at, updated_at
+                      team_slots_available, added_by, event_date, start_date, start_time,
+                      end_date, end_time, team_members, created_at, updated_at
         """, (
             data.get('event_name'),
             data.get('organisation'),
             data.get('platform'),
-            data.get('team_size'),  # Will be NULL if not provided
-            data.get('team_slots_available'),  # Will be NULL if not provided
+            data.get('team_size'),
+            data.get('team_slots_available'),
             data.get('added_by'),
-            data.get('event_date'),
-            data.get('team_members')  # Will be NULL if not provided
+            data.get('event_date'),  # Deprecated but kept for backwards compatibility
+            data.get('start_date'),
+            data.get('start_time'),
+            data.get('end_date'),
+            data.get('end_time'),
+            data.get('team_members')
         ))
         
         # Fetch the newly created row returned by RETURNING clause
@@ -1478,6 +1530,10 @@ def create_event():
             'added_by': row['added_by'],
             # Convert date/timestamp objects to ISO format strings
             'event_date': row['event_date'].isoformat() if row['event_date'] else None,
+            'start_date': row['start_date'].isoformat() if row['start_date'] else None,
+            'start_time': str(row['start_time']) if row['start_time'] else None,
+            'end_date': row['end_date'].isoformat() if row['end_date'] else None,
+            'end_time': str(row['end_time']) if row['end_time'] else None,
             'team_members': row['team_members'],
             'created_at': row['created_at'].isoformat() if row['created_at'] else None,
             'updated_at': row['updated_at'].isoformat() if row['updated_at'] else None
@@ -1531,8 +1587,8 @@ def get_event(event_id):
         # Query for specific event by ID using parameterized query (prevents SQL injection)
         cur.execute("""
             SELECT id, event_name, organisation, platform, team_size, 
-                   team_slots_available, added_by, event_date, team_members,
-                   created_at, updated_at
+                   team_slots_available, added_by, event_date, start_date, start_time,
+                   end_date, end_time, team_members, created_at, updated_at
             FROM events
             WHERE id = %s
         """, (event_id,))
@@ -1559,6 +1615,10 @@ def get_event(event_id):
             'added_by': row['added_by'],
             # Convert date/timestamp to ISO format string for JSON
             'event_date': row['event_date'].isoformat() if row['event_date'] else None,
+            'start_date': row['start_date'].isoformat() if row['start_date'] else None,
+            'start_time': str(row['start_time']) if row['start_time'] else None,
+            'end_date': row['end_date'].isoformat() if row['end_date'] else None,
+            'end_time': str(row['end_time']) if row['end_time'] else None,
             'team_members': row['team_members'],
             'created_at': row['created_at'].isoformat() if row['created_at'] else None,
             'updated_at': row['updated_at'].isoformat() if row['updated_at'] else None
@@ -1613,9 +1673,13 @@ def update_event(event_id):
         if not data.get('added_by'):
             return jsonify({"error": "Added by is required"}), 400
         
-        # event_date is required
-        if not data.get('event_date'):
-            return jsonify({"error": "Event date is required"}), 400
+        # end_date is required
+        if not data.get('end_date'):
+            return jsonify({"error": "End date is required"}), 400
+        
+        # end_time is required
+        if not data.get('end_time'):
+            return jsonify({"error": "End time is required"}), 400
         
         conn = get_db_connection()
         cur = conn.cursor()
@@ -1623,11 +1687,12 @@ def update_event(event_id):
             UPDATE events 
             SET event_name = %s, organisation = %s, platform = %s, 
                 team_size = %s, team_slots_available = %s, added_by = %s, 
-                event_date = %s, team_members = %s, updated_at = now()
+                event_date = %s, start_date = %s, start_time = %s, end_date = %s,
+                end_time = %s, team_members = %s, updated_at = now()
             WHERE id = %s
             RETURNING id, event_name, organisation, platform, team_size, 
-                      team_slots_available, added_by, event_date, team_members,
-                      created_at, updated_at
+                      team_slots_available, added_by, event_date, start_date, start_time,
+                      end_date, end_time, team_members, created_at, updated_at
         """, (
             data.get('event_name'),
             data.get('organisation'),
@@ -1636,6 +1701,10 @@ def update_event(event_id):
             data.get('team_slots_available'),
             data.get('added_by'),
             data.get('event_date'),
+            data.get('start_date'),
+            data.get('start_time'),
+            data.get('end_date'),
+            data.get('end_time'),
             data.get('team_members'),
             event_id
         ))
@@ -1656,6 +1725,10 @@ def update_event(event_id):
             'team_slots_available': row['team_slots_available'],
             'added_by': row['added_by'],
             'event_date': row['event_date'].isoformat() if row['event_date'] else None,
+            'start_date': row['start_date'].isoformat() if row['start_date'] else None,
+            'start_time': str(row['start_time']) if row['start_time'] else None,
+            'end_date': row['end_date'].isoformat() if row['end_date'] else None,
+            'end_time': str(row['end_time']) if row['end_time'] else None,
             'team_members': row['team_members'],
             'created_at': row['created_at'].isoformat() if row['created_at'] else None,
             'updated_at': row['updated_at'].isoformat() if row['updated_at'] else None
@@ -1997,7 +2070,24 @@ def send_message():
 def get_messages():
     try:
         messages = Chat.query.order_by(Chat.time.desc()).all()
-        return jsonify({"status": "success", "messages": [m.to_dict() for m in messages]})
+        # Convert timestamps to IST for all messages
+        messages_list = []
+        for m in messages:
+            msg_dict = m.to_dict()
+            # Convert the time/timestamp to IST
+            if 'time' in msg_dict and msg_dict['time']:
+                try:
+                    # Parse the time string if it's a string, or use datetime object
+                    if isinstance(msg_dict['time'], str):
+                        dt = datetime.fromisoformat(msg_dict['time'].replace('Z', '+00:00'))
+                    else:
+                        dt = msg_dict['time']
+                    msg_dict['time'] = to_ist(dt)
+                    msg_dict['timestamp'] = msg_dict['time']  # Add timestamp field for consistency
+                except:
+                    pass
+            messages_list.append(msg_dict)
+        return jsonify({"status": "success", "messages": messages_list})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
