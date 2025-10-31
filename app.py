@@ -1771,6 +1771,8 @@ def delete_event(event_id):
         - Frontend should confirm deletion with user before calling this
     """
     try:
+        print(f"🗑️ Attempting to delete event with ID: {event_id}")
+        
         # Connect to database
         conn = get_db_connection()
         cur = conn.cursor()
@@ -1779,6 +1781,8 @@ def delete_event(event_id):
         # If no rows match, deleted will be None
         cur.execute("DELETE FROM events WHERE id = %s RETURNING id", (event_id,))
         deleted = cur.fetchone()
+        
+        print(f"📊 Delete query executed, deleted record: {deleted}")
         
         # Commit the transaction to make deletion permanent
         conn.commit()
@@ -1789,7 +1793,10 @@ def delete_event(event_id):
         
         # Check if event was found and deleted
         if not deleted:
+            print(f"❌ Event with ID {event_id} not found")
             return jsonify({"error": "Event not found"}), 404
+        
+        print(f"✅ Event with ID {event_id} successfully deleted")
         
         # ========================================
         # ACTIVITY LOGGING
@@ -1802,6 +1809,7 @@ def delete_event(event_id):
         
     except Exception as e:
         # Log error and return error message
+        print(f"❌ Error deleting event: {e}")
         logging.error(f"Error deleting event: {e}", exc_info=True)
         return jsonify({"error": str(e)}), 500
 

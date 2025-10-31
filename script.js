@@ -4215,6 +4215,20 @@ async function loadEvents() {
       eventsList.innerHTML = events.map(event => renderEventCard(event)).join('');
     }
     
+    // ========================================
+    // ADD EVENT LISTENERS FOR DELETE BUTTONS
+    // ========================================
+    // Since buttons are dynamically created, we need to add event listeners after rendering
+    document.querySelectorAll('.event-card .btn-danger').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const eventCard = this.closest('.event-card');
+        const eventId = parseInt(eventCard.dataset.eventId);
+        const eventName = eventCard.querySelector('.event-title').textContent;
+        console.log('Delete button clicked for event:', eventId, eventName);
+        deleteEvent(eventId, eventName);
+      });
+    });
+    
     // Log success message with count
     console.log(`✅ Loaded ${events.length} events`);
     
@@ -4351,7 +4365,7 @@ function renderEventCard(event) {
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
             </svg>
           </button>
-          <button class="btn-icon btn-danger" onclick="deleteEvent(${event.id}, '${event.event_name.replace(/'/g, "\\'")}'))" title="Delete Event">
+          <button class="btn-icon btn-danger" title="Delete Event">
             <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
             </svg>
@@ -4687,27 +4701,39 @@ window.editEvent = async function(eventId) {
  * - Deletion is immediate and permanent
  */
 window.deleteEvent = async function(eventId, eventName) {
+  console.log('🗑️ deleteEvent called with ID:', eventId, 'Name:', eventName);
+  
   // ========================================
   // CONFIRMATION DIALOG
   // ========================================
   // Show browser confirmation dialog with event name
   // Returns true if user clicks OK, false if Cancel
   if (!confirm(`Are you sure you want to delete "${eventName}"?\n\nThis action cannot be undone.`)) {
+    console.log('❌ Delete cancelled by user');
     return;  // Exit function if user cancels
   }
+  
+  console.log('✅ Delete confirmed, proceeding with deletion');
   
   try {
     // ========================================
     // SEND DELETE REQUEST
     // ========================================
+    console.log('📡 Sending DELETE request to:', `/api/events/${eventId}`);
     const response = await fetch(`/api/events/${eventId}`, {
       method: 'DELETE'
     });
     
+    console.log('📡 Response received:', response.status, response.statusText);
+    
     // Check if deletion was successful
     if (!response.ok) {
-      throw new Error('Failed to delete event');
+      const errorText = await response.text();
+      console.log('❌ Response not ok, error:', errorText);
+      throw new Error(`Failed to delete event: ${errorText}`);
     }
+    
+    console.log('✅ Delete request successful');
     
     // ========================================
     // SUCCESS HANDLING
@@ -4907,7 +4933,7 @@ function renderIdeaCard(idea) {
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
               </svg>
             </button>
-            <button class="btn-icon btn-danger" onclick="deleteIdea(${idea.id}, '${idea.idea_title.replace(/'/g, "\\'")}'))" title="Delete Idea">
+            <button class="btn-icon btn-danger" onclick="deleteIdea(${idea.id}, '${idea.idea_title.replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\\/g, '\\\\')}')" title="Delete Idea">
               <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
               </svg>
