@@ -16,8 +16,8 @@
 # Import required libraries
 import os  # For accessing environment variables and file system operations
 from dotenv import load_dotenv  # For loading environment variables from .env file
-import psycopg2  # PostgreSQL database adapter for Python (raw SQL queries)
-import psycopg2.extras  # Extra utilities for psycopg2, including DictCursor for dict-like results
+import psycopg  # PostgreSQL database adapter (v3)
+from psycopg.rows import dict_row  # Row factory for dict-like results
 from flask_sqlalchemy import SQLAlchemy  # ORM (Object-Relational Mapping) for Flask
 from datetime import datetime  # For handling date and time operations
 
@@ -57,9 +57,9 @@ def get_db_connection():
         raise RuntimeError("Please set the DATABASE_URL environment variable.")
     
     # Create and return a new database connection
-    # - dsn: Data Source Name (the database URL)
-    # - cursor_factory: DictCursor allows column access by name (e.g., row['column_name'])
-    conn = psycopg2.connect(dsn=database_url, cursor_factory=psycopg2.extras.DictCursor)
+    # - conninfo: standard connection string
+    # - row_factory: returns rows as dictionaries
+    conn = psycopg.connect(database_url, row_factory=dict_row)
     return conn
 
 
@@ -219,6 +219,29 @@ class Chat(db.Model):
         }
 
 
+# --- Project Model ---
+class Project(db.Model):
+    __tablename__ = 'projects'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String, nullable=False)
+    description = db.Column(db.Text)
+    start_date = db.Column(db.Date)
+    end_date = db.Column(db.Date)
+    status = db.Column(db.String, default='active')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "description": self.description,
+            "start_date": self.start_date.strftime("%Y-%m-%d") if self.start_date else None,
+            "end_date": self.end_date.strftime("%Y-%m-%d") if self.end_date else None,
+            "status": self.status
+        }
+
+
 # --- Task Model ---
 class Task(db.Model):
     """
@@ -259,6 +282,18 @@ class Task(db.Model):
     
     # Due Date: When the task should be completed (optional)
     due_date = db.Column(db.Date)
+    
+    # Project ID: Links to the parent project
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
+    
+    # Parent Task: For subtask hierarchy
+    parent_task_id = db.Column(db.Integer, db.ForeignKey('tasks.id'))
+    
+    # Dependency: For blocking tasks
+    depends_on_task_id = db.Column(db.Integer, db.ForeignKey('tasks.id'))
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def to_dict(self):
         """

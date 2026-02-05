@@ -15,7 +15,7 @@
 # 
 # ARCHITECTURE:
 # - Backend: Flask (Python web framework)
-# - Database: PostgreSQL with psycopg2 (raw SQL) and SQLAlchemy (ORM)
+# - Database: PostgreSQL with psycopg (raw SQL) and SQLAlchemy (ORM)
 # - Frontend: Vanilla JavaScript (Single Page Application)
 # - Deployment: Render.com with PostgreSQL database
 # 
@@ -79,8 +79,8 @@ from config import get_db_connection, db, log_activity, ActivityLog, Chat
 # External libraries
 import logging  # Python's built-in logging framework for debugging
 import requests  # HTTP library for making external API calls (used for AI features)
-import psycopg2  # PostgreSQL database adapter
-import psycopg2.extras  # Additional psycopg2 utilities
+import psycopg  # PostgreSQL database adapter
+# import psycopg2.extras # Not needed with psycopg 3 row factories
 
 # ============================================
 # TIMEZONE UTILITY FUNCTIONS
@@ -173,35 +173,13 @@ def serve_index():
     return send_from_directory('.', 'index.html')
 
 
-@app.route('/style.css')
-def serve_css():
-    """
-    Serve the CSS stylesheet file.
-    
-    The frontend requests this file to apply visual styling to the application.
-    This route handles requests to http://localhost:5000/style.css
-    
-    Returns:
-        CSS file: Application styles and layout
-    """
-    return send_from_directory('.', 'style.css')
+@app.route('/css/<path:path>')
+def serve_css_folder(path):
+    return send_from_directory('css', path)
 
-
-@app.route('/script.js')
-def serve_js():
-    """
-    Serve the JavaScript application file.
-    
-    This file contains all the frontend logic including:
-    - User interface interactions
-    - API calls to backend endpoints
-    - Dynamic content rendering
-    - State management
-    
-    Returns:
-        JavaScript file: Frontend application logic
-    """
-    return send_from_directory('.', 'script.js')
+@app.route('/js/<path:path>')
+def serve_js_folder(path):
+    return send_from_directory('js', path)
 
 # ============================================
 # DATABASE INITIALIZATION FUNCTION
@@ -236,7 +214,7 @@ def init_db():
         None
     
     Raises:
-        psycopg2.Error: If database connection or query execution fails
+        psycopg.Error: If database connection or query execution fails
     """
     # Establish a connection to the PostgreSQL database
     conn = get_db_connection()
@@ -532,13 +510,13 @@ except Exception as e:
 
 def row_to_dict(row):
     """
-    Convert a psycopg2 DictRow to a standard Python dictionary.
+    Convert a database row (dictionary-like) to a standard Python dictionary.
     
-    This utility function is used throughout the API to convert
-    database query results into JSON-serializable dictionaries.
+    This utility handles the conversion of date/datetime objects to strings
+    for JSON serialization.
     
     Args:
-        row: A psycopg2.extras.DictRow object from a database query
+        row: A dictionary-like object (e.g., from psycopg.rows.dict_row)
     
     Returns:
         dict: Standard Python dictionary, or None if row is None
@@ -1114,7 +1092,7 @@ def upload_attachment(task_id):
         cur.execute("""
             INSERT INTO attachments (task_id, filename, content_type, content, uploaded_by)
             VALUES (%s, %s, %s, %s, %s) RETURNING id, filename, uploaded_at, uploaded_by;
-        """, (task_id, filename, content_type, psycopg2.Binary(content), uploaded_by))
+        """, (task_id, filename, content_type, content, uploaded_by))
         att = cur.fetchone()
         conn.commit()
         cur.close()
@@ -2661,7 +2639,7 @@ Format your response as clear bullet points."""
             "generated_at": datetime.utcnow().isoformat()
         })
         
-    except ImportError as e:
+    except psycopg.Error as e:
         logging.error(f"Failed to import Google Genai SDK: {str(e)}")
         return jsonify({
             "error": "AI module not installed",

@@ -1,0 +1,2458 @@
+/* Graph Styles - Enhanced for Interactivity */
+#cy {
+  width: 100%;
+  height: 600px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  background: #ffffff;
+  background-image:
+    radial-gradient(circle at 25% 25%, #f8fafc 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, #f8fafc 0%, transparent 50%);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  position: relative;
+  overflow: hidden;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  cursor: grab;
+  transition: box-shadow 0.3s ease;
+}
+
+#cy:hover {
+  box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+}
+
+#cy:active {
+  cursor: grabbing;
+}
+
+/* Graph interaction hints */
+#cy::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(circle at center, rgba(102, 126, 234, 0.1) 0%, transparent 70%);
+  transition: opacity 0.3s ease;
+}
+
+#cy:hover::before {
+  opacity: 1;
+}
+
+#cy:empty::before {
+  content: "Loading graph visualization...";
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #64748b;
+  font-size: 16px;
+  font-weight: 500;
+  background: #f8fafc;
+  border-radius: 12px;
+}
+
+#cy:hover {
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+}
+
+/* Graph Edge Visibility - Override any hiding styles */
+#cy svg g line,
+#cy svg g path,
+#cy svg g polyline {
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: block !important;
+  stroke-opacity: 1 !important;
+  fill-opacity: 1 !important;
+}
+
+/* Force edge visibility in all graph states */
+#cy .cy-edge {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+#cy .cy-edge-selected {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Graph Legend */
+.graph-legend {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  font-size: 12px;
+  z-index: 100;
+}
+
+.graph-legend-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.graph-legend-color {
+  width: 16px;
+  height: 4px;
+  margin-right: 8px;
+  border-radius: 2px;
+}
+
+.graph-legend-color.belongs-to {
+  background: #28a745;
+}
+
+.graph-legend-color.subtask {
+  background: #6f42c1;
+  border-style: dashed;
+}
+
+.graph-legend-color.depends-on {
+  background: #dc3545;
+}
+
+/* Minimized State */
+#chat-widget.minimized {
+  height: 40px;
+}
+
+/* Chat Header */
+#chat-header {
+  background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+  color: white;
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: move;
+  user-select: none;
+}
+
+.chat-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  font-size: 1rem;
+  flex: 1;
+}
+
+.chat-title svg {
+  flex-shrink: 0;
+}
+
+.chat-online-count {
+  font-size: 0.75em;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 3px 10px;
+  border-radius: 12px;
+  margin-left: 10px;
+  font-weight: 500;
+}
+
+.chat-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.chat-controls button {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: #fff;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.chat-controls button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+/* Chat Body */
+#chat-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #f8f9fa;
+  padding: 16px;
+  gap: 12px;
+  overflow: hidden;
+}
+
+/* Chat Box */
+.chat-box {
+  flex: 1;
+  overflow-y: auto;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 16px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 14px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.chat-box::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-box::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.chat-box::-webkit-scrollbar-thumb {
+  background: #06b6d4;
+  border-radius: 3px;
+}
+
+.chat-box::-webkit-scrollbar-thumb:hover {
+  background: #0891b2;
+}
+
+/* Welcome Screen */
+.chat-welcome {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  color: #6b7280;
+}
+
+.welcome-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  animation: bounce 2s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.chat-welcome h3 {
+  margin: 0 0 8px 0;
+  color: #1f2937;
+  font-size: 1.2em;
+}
+
+.chat-welcome p {
+  margin: 0;
+  font-size: 0.9em;
+  color: #9ca3af;
+}
+
+/* Message Bubbles */
+.message {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
+  animation: messageSlide 0.3s ease-out;
+  position: relative;
+  padding-right: 30px;
+}
+
+.message:hover .message-delete {
+  opacity: 1;
+  visibility: visible;
+}
+
+@keyframes messageSlide {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.message-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.message-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.message-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.message strong {
+  color: #1f2937;
+  font-weight: 600;
+  font-size: 0.95em;
+}
+
+.time {
+  font-size: 0.7em;
+  color: #9ca3af;
+}
+
+.message-text {
+  background: #f3f4f6;
+  border-radius: 12px;
+  padding: 10px 14px;
+  color: #374151;
+  word-wrap: break-word;
+  line-height: 1.5;
+}
+
+/* Message Delete Button */
+.message-delete {
+  position: absolute;
+  top: 8px;
+  right: 4px;
+  background: rgba(239, 68, 68, 0.9);
+  border: none;
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s;
+}
+
+.message-delete:hover {
+  background: #ef4444;
+  transform: scale(1.1);
+}
+
+.message-delete:active {
+  transform: scale(0.95);
+}
+
+/* Typing Indicator */
+.chat-typing-indicator {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  background: #e5e7eb;
+  border-radius: 12px;
+  width: fit-content;
+  margin-left: 42px;
+}
+
+.chat-typing-indicator span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #9ca3af;
+  animation: typingDot 1.4s infinite;
+}
+
+.chat-typing-indicator span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.chat-typing-indicator span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes typingDot {
+  0%, 60%, 100% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(-8px);
+  }
+}
+
+/* Message Form */
+.message-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.user-avatar-input {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.user-avatar-input input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 14px;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.user-avatar-input input:focus {
+  outline: none;
+  border-color: #06b6d4;
+  box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1);
+}
+
+.message-input-container {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.message-input-container input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  font-size: 14px;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.message-input-container input:focus {
+  outline: none;
+  border-color: #06b6d4;
+  box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1);
+}
+
+.send-button {
+  background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+  border: none;
+  color: white;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.send-button:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(6, 182, 212, 0.4);
+}
+
+.send-button:active {
+  transform: scale(0.95);
+}
+
+.send-button svg {
+  transform: rotate(45deg);
+}
+
+/* Resize Handle - Chat Widget */
+#resize-handle {
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  cursor: nwse-resize;
+  border-radius: 16px 0 16px 0;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+  z-index: 10;
+}
+
+#resize-handle:hover {
+  opacity: 1;
+}
+
+/* Resize Handle - Activity Widget */
+#activity-resize-handle {
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  cursor: nwse-resize;
+  border-radius: 16px 0 16px 0;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+  z-index: 10;
+}
+
+#activity-resize-handle:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+#activity-resize-handle::before {
+  content: '⇲';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 10px;
+  font-weight: bold;
+}
+
+/* ============================================
+   EXPORT DATA STYLES
+   ============================================ */
+
+/* Export Button in Sidebar */
+.nav-item.export-btn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  color: white !important;
+  font-weight: 600;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  margin-bottom: 8px;
+  margin-top: 8px;
+  padding: 14px 16px !important;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+  flex-shrink: 0; /* Prevent shrinking */
+}
+
+.nav-item.export-btn:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+  transform: translateX(8px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.5);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.nav-item.export-btn .nav-icon {
+  color: white !important;
+  width: 20px;
+  height: 20px;
+}
+
+/* Export Modal */
+.export-modal-content {
+  max-width: 600px;
+  width: 90%;
+}
+
+.export-section {
+  margin-bottom: 24px;
+}
+
+.export-section h3 {
+  font-size: 1.1rem;
+  color: #1f2937;
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+/* Export Checkboxes */
+.export-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.export-checkbox {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  background: #f9fafb;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.export-checkbox:hover {
+  border-color: #667eea;
+  background: #f3f4f6;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.export-checkbox input[type="checkbox"] {
+  margin-right: 12px;
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #667eea;
+}
+
+.export-checkbox input[type="checkbox"]:checked + .export-label {
+  color: #667eea;
+  font-weight: 600;
+}
+
+.export-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #4b5563;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.export-label svg {
+  flex-shrink: 0;
+  color: #6b7280;
+  transition: color 0.2s;
+}
+
+.export-checkbox:hover .export-label svg {
+  color: #667eea;
+}
+
+/* Export Format Options */
+.export-format-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.export-radio {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  background: #f9fafb;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.export-radio:hover {
+  border-color: #667eea;
+  background: #f3f4f6;
+}
+
+.export-radio input[type="radio"] {
+  margin-right: 12px;
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #667eea;
+}
+
+.export-radio input[type="radio"]:checked ~ .format-option {
+  color: #667eea;
+}
+
+.format-option {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.format-option strong {
+  font-size: 1rem;
+  color: #1f2937;
+}
+
+.format-option small {
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+
+.export-radio input[type="radio"]:checked ~ .format-option strong {
+  color: #667eea;
+}
+
+/* Export Info Box */
+.export-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  border-left: 4px solid #3b82f6;
+  border-radius: 8px;
+  margin-top: 16px;
+}
+
+.export-info svg {
+  flex-shrink: 0;
+  color: #3b82f6;
+  margin-top: 2px;
+}
+
+.export-info span {
+  color: #1e40af;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+/* Modal Footer */
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+/* Responsive Export Modal */
+@media (max-width: 768px) {
+  .export-options {
+    grid-template-columns: 1fr;
+  }
+  
+  .export-modal-content {
+    width: 95%;
+  }
+}
+
+/* ============================================
+   ALERTS STYLES
+   ============================================ */
+
+.alert-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px;
+  margin-bottom: 12px;
+  border-radius: 12px;
+  border-left: 4px solid;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  animation: slideIn 0.3s ease-out;
+}
+
+.alert-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.alert-item.alert-error {
+  border-left-color: #ef4444;
+  background: linear-gradient(to right, #fef2f2, #ffffff);
+}
+
+.alert-item.alert-warning {
+  border-left-color: #f59e0b;
+  background: linear-gradient(to right, #fffbeb, #ffffff);
+}
+
+.alert-item.alert-info {
+  border-left-color: #3b82f6;
+  background: linear-gradient(to right, #eff6ff, #ffffff);
+}
+
+.alert-icon {
+  font-size: 28px;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.alert-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.alert-title {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #1f2937;
+  margin-bottom: 4px;
+}
+
+.alert-message {
+  color: #6b7280;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin-bottom: 6px;
+}
+
+.alert-time {
+  font-size: 0.8rem;
+  color: #9ca3af;
+  font-style: italic;
+}
+
+.alert-dismiss {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  opacity: 0.5;
+  transition: all 0.2s;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.alert-dismiss:hover {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.05);
+  transform: scale(1.1);
+}
+
+.alert-dismiss svg {
+  color: #6b7280;
+}
+
+/* Alert Actions Container */
+.alert-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* Slack Button */
+.alert-slack-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #611f69 0%, #4a154b 100%);
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(74, 21, 75, 0.2);
+}
+
+.alert-slack-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #4a154b 0%, #611f69 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(74, 21, 75, 0.3);
+}
+
+.alert-slack-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(74, 21, 75, 0.2);
+}
+
+.alert-slack-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.alert-slack-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.alert-slack-btn span {
+  font-size: 0.85rem;
+}
+
+/* Notification animations */
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideOutRight {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
+@keyframes slideOut {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Note: Graph node and edge styles are handled in JavaScript (Cytoscape.js)
+   CSS cannot style canvas-rendered elements properly */
+
+/* Graph Layout and Container */
+#cy {
+  width: 100% !important;
+  height: 600px !important;
+  border: 2px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  background: #ffffff !important;
+  background-image:
+    radial-gradient(circle at 25% 25%, #f8fafc 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, #f8fafc 0%, transparent 50%) !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+  position: relative !important;
+  overflow: hidden !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Graph Legend Styles */
+.graph-legend {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  font-size: 12px;
+  z-index: 100;
+  backdrop-filter: blur(4px);
+}
+
+.graph-legend-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 6px;
+  white-space: nowrap;
+}
+
+.graph-legend-item:last-child {
+  margin-bottom: 0;
+}
+
+.graph-legend-color {
+  width: 20px;
+  height: 4px;
+  margin-right: 8px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.graph-legend-color.belongs-to {
+  background: #28a745;
+}
+
+.graph-legend-color.subtask {
+  background: #6f42c1;
+  border-style: dashed;
+  border-width: 1px;
+  border-color: #6f42c1;
+  width: 18px;
+  height: 2px;
+}
+
+.graph-legend-color.depends-on {
+  background: #dc3545;
+}
+
+.graph-legend span {
+  font-size: 11px;
+  color: #374151;
+  font-weight: 500;
+}
+
+/* ============================================
+   AI SUGGESTIONS STYLES
+   ============================================ */
+
+/* AI Filter Buttons */
+.filter-btn {
+  background: #eef1ff;
+  color: #182848;
+  border: 1px solid #4b6cb7;
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: all 0.2s ease-in-out;
+  font-family: inherit;
+}
+
+.filter-btn:hover {
+  background: #dce3fc;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(75, 108, 183, 0.2);
+}
+
+.filter-btn.active {
+  background: #4b6cb7;
+  color: white;
+  font-weight: 500;
+}
+
+/* AI Task Button */
+.task-btn-ai:hover {
+  background: #dce3fc !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* AI Suggestion Box */
+.suggestion-box-ai {
+  background: linear-gradient(135deg, #fff9e6 0%, #fff3cc 100%);
+  border-left: 6px solid #ffa726;
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 10px;
+  color: #2c3e50;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  animation: slideDown 0.3s ease-out;
+}
+
+/* Loading Spinner */
+.ai-loading-spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #4b6cb7;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* AI Badge */
+.ai-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  color: white;
+  font-size: 0.8em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* AI Suggestion Header */
+.ai-suggestion-header {
+  border-bottom: 2px solid rgba(75, 108, 183, 0.2);
+  padding-bottom: 12px;
+  margin-bottom: 15px;
+}
+
+/* AI Suggestion Content */
+.ai-suggestion-content {
+  padding: 10px 0;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.ai-suggestion-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.ai-suggestion-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.ai-suggestion-content::-webkit-scrollbar-thumb {
+  background: #4b6cb7;
+  border-radius: 3px;
+}
+
+.ai-suggestion-content::-webkit-scrollbar-thumb:hover {
+  background: #3c5baa;
+}
+
+/* AI Suggestion Footer */
+.ai-suggestion-footer {
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px dashed rgba(75, 108, 183, 0.3);
+  text-align: center;
+}
+
+/* AI Error State */
+.ai-error {
+  background: #ffebee;
+  border-left: 6px solid #f44336;
+  padding: 20px;
+  border-radius: 8px;
+  color: #c62828;
+  text-align: center;
+}
+
+.ai-error strong {
+  display: block;
+  font-size: 1.1em;
+  margin-bottom: 10px;
+}
+
+.ai-error button {
+  margin-top: 10px;
+  padding: 8px 16px;
+  background: #f44336;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.ai-error button:hover {
+  background: #d32f2f;
+  transform: scale(1.05);
+}
+
+/* Responsive Design for AI Suggestions */
+@media (max-width: 768px) {
+  .suggestion-box-ai {
+    padding: 15px;
+    font-size: 0.9rem;
+  }
+  
+  .ai-badge {
+    font-size: 0.75em;
+    padding: 3px 10px;
+  }
+  
+  .ai-suggestion-header {
+    flex-direction: column;
+    align-items: flex-start !important;
+  }
+}
+
+/* ============================================
+   TASK RELATIONSHIP BOXES
+   ============================================ */
+
+.relationship-container {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  padding: 20px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 12px;
+  border-left: 4px solid #4b6cb7;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  margin-top: 10px;
+}
+
+.relationship-box {
+  display: flex;
+  flex-direction: column;
+}
+
+.relationship-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 10px;
+  font-size: 0.95rem;
+}
+
+.relationship-label svg {
+  flex-shrink: 0;
+  color: #4b6cb7;
+}
+
+.relationship-help {
+  display: block;
+  color: #6c757d;
+  margin-top: 6px;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.relationship-select {
+  margin: 0 !important;
+  border: 2px solid #dee2e6;
+  transition: all 0.2s ease;
+}
+
+.relationship-select:focus {
+  border-color: #4b6cb7;
+  box-shadow: 0 0 0 3px rgba(75, 108, 183, 0.1);
+}
+
+/* Task Relationship Badges in Task List */
+.task-relationship-badge {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.task-relationship-badge.parent {
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  border-left: 4px solid #2196f3;
+  color: #0d47a1;
+}
+
+.task-relationship-badge.dependency {
+  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+  border-left: 4px solid #ff9800;
+  color: #e65100;
+}
+
+.task-relationship-badge strong {
+  font-weight: 600;
+}
+
+/* Responsive for relationship boxes */
+@media (max-width: 768px) {
+  .relationship-container {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 15px;
+  }
+}
+
+/* ============================================
+   ENHANCED GRAPH CONTROLS
+   ============================================ */
+
+/* Graph Control Groups */
+.graph-control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.3s ease;
+}
+
+.graph-control-group:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transform: translateY(-1px);
+}
+
+.graph-control-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.graph-control-label svg {
+  color: #667eea;
+  flex-shrink: 0;
+}
+
+/* Zoom Controls */
+.zoom-controls {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.zoom-btn {
+  flex: 1;
+  min-width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: 10px;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.zoom-btn:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5);
+}
+
+.zoom-btn:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.zoom-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Filter Checkboxes */
+.filter-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #475569;
+}
+
+.filter-checkbox:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.filter-checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #667eea;
+}
+
+.filter-checkbox input[type="checkbox"]:checked + span {
+  color: #667eea;
+  font-weight: 600;
+}
+
+/* Enhanced Graph Legend */
+.graph-legend-enhanced {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(255, 255, 255, 0.98);
+  padding: 16px;
+  border-radius: 12px;
+  border: 2px solid #e2e8f0;
+  font-size: 13px;
+  z-index: 100;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  transition: all 0.3s ease;
+}
+
+.graph-legend-enhanced:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+  transform: translateY(-2px);
+}
+
+.legend-title {
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 12px;
+  font-size: 14px;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 8px;
+}
+
+.legend-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Improved Graph Container */
+#cy {
+  width: 100% !important;
+  height: 650px !important;
+  border: 2px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  background: #ffffff !important;
+  background-image:
+    radial-gradient(circle at 25% 25%, #f8fafc 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, #f8fafc 0%, transparent 50%) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+  position: relative !important;
+  overflow: hidden !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  cursor: grab !important;
+  transition: box-shadow 0.3s ease, border-color 0.3s ease !important;
+}
+
+#cy:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12) !important;
+  border-color: #cbd5e1 !important;
+}
+
+#cy:active {
+  cursor: grabbing !important;
+}
+
+/* Node Highlighting Effects */
+@keyframes nodeHighlight {
+  0% {
+    box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 15px rgba(102, 126, 234, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(102, 126, 234, 0);
+  }
+}
+
+/* Graph Export Button Animation */
+#exportGraph {
+  position: relative;
+  overflow: hidden;
+}
+
+#exportGraph::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+#exportGraph:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+/* Search Input Enhancement */
+#searchGraph {
+  transition: all 0.3s ease;
+}
+
+#searchGraph:focus {
+  transform: scale(1.02);
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15) !important;
+}
+
+/* Responsive Graph Controls */
+@media (max-width: 1024px) {
+  .zoom-controls {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .zoom-btn {
+    min-width: 44px;
+    height: 44px;
+  }
+}
+
+@media (max-width: 768px) {
+  .graph-control-group {
+    padding: 12px;
+  }
+  
+  .zoom-controls {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  
+  .zoom-btn {
+    min-width: 40px;
+    height: 40px;
+  }
+  
+  .graph-legend-enhanced {
+    position: static;
+    margin-bottom: 16px;
+    width: 100%;
+  }
+  
+  #cy {
+    height: 450px !important;
+  }
+  
+  .filter-checkbox {
+    flex: 1;
+    justify-content: center;
+  }
+}
+
+/* Animation for Graph Stats */
+#graphStats > div {
+  animation: fadeInUp 0.5s ease-out backwards;
+}
+
+#graphStats > div:nth-child(1) { animation-delay: 0.1s; }
+#graphStats > div:nth-child(2) { animation-delay: 0.2s; }
+#graphStats > div:nth-child(3) { animation-delay: 0.3s; }
+#graphStats > div:nth-child(4) { animation-delay: 0.4s; }
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Smooth Transitions for Control Groups */
+.graph-control-group * {
+  transition: all 0.2s ease;
+}
+
+/* Loading State for Graph */
+#cy.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+#cy.loading::after {
+  content: 'Loading graph...';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 18px;
+  color: #667eea;
+  font-weight: 600;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* ============================================
+   INTERACTIVE CALENDAR STYLES
+   ============================================ */
+
+/* Calendar Control Group */
+.calendar-control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.3s ease;
+}
+
+.calendar-control-group:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.calendar-control-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.calendar-control-label svg {
+  color: #667eea;
+  flex-shrink: 0;
+}
+
+/* Calendar Filter Chips */
+.calendar-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.calendar-filter-chip input[type="checkbox"] {
+  display: none;
+}
+
+.calendar-filter-chip span {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+  display: inline-block;
+}
+
+/* Chip Styles */
+.chip-todo {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  color: #1e40af;
+  border-color: #3b82f6;
+}
+
+.chip-progress {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #92400e;
+  border-color: #f59e0b;
+}
+
+.chip-done {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  color: #065f46;
+  border-color: #10b981;
+}
+
+.chip-overdue {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  color: #991b1b;
+  border-color: #ef4444;
+}
+
+.calendar-filter-chip:hover span {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.calendar-filter-chip input:checked + span {
+  border-color: currentColor;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  font-weight: 700;
+}
+
+.calendar-filter-chip input:not(:checked) + span {
+  opacity: 0.5;
+  filter: grayscale(0.5);
+}
+
+/* Calendar Stats Badges */
+.calendar-stat-badge {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
+}
+
+.calendar-stat-badge:hover {
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.stat-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.stat-success {
+  color: #10b981;
+}
+
+.stat-warning {
+  color: #f59e0b;
+}
+
+.stat-danger {
+  color: #ef4444;
+}
+
+/* Enhanced Calendar Container */
+#calendar {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+#calendar:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+/* FullCalendar Custom Styles */
+.fc {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.fc .fc-button-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.fc .fc-button-primary:hover {
+  background: linear-gradient(135deg, #5568d3 0%, #653a8e 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.fc .fc-button-primary:not(:disabled):active {
+  background: linear-gradient(135deg, #4a5bc2 0%, #562f7a 100%);
+  transform: translateY(0);
+}
+
+.fc .fc-button-primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Calendar Event Styles */
+.fc-event {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 6px;
+  padding: 2px 4px;
+  font-weight: 600;
+  border-left-width: 4px !important;
+}
+
+.fc-event:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  z-index: 100;
+}
+
+.fc-daygrid-event {
+  white-space: normal;
+  line-height: 1.3;
+}
+
+/* Calendar Day Cell Hover */
+.fc-daygrid-day:hover {
+  background: rgba(102, 126, 234, 0.05);
+  cursor: pointer;
+}
+
+.fc-daygrid-day.fc-day-today {
+  background: rgba(102, 126, 234, 0.08) !important;
+}
+
+.fc-daygrid-day.fc-day-today:hover {
+  background: rgba(102, 126, 234, 0.12) !important;
+}
+
+/* Calendar Header */
+.fc .fc-toolbar-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.fc .fc-col-header-cell {
+  padding: 12px 0;
+  font-weight: 600;
+  color: #475569;
+  background: #f8fafc;
+}
+
+/* Calendar Day Numbers */
+.fc .fc-daygrid-day-number {
+  padding: 8px;
+  font-weight: 600;
+  color: #475569;
+  transition: all 0.2s ease;
+}
+
+.fc-daygrid-day:hover .fc-daygrid-day-number {
+  color: #667eea;
+  transform: scale(1.1);
+}
+
+/* Drag and Drop Feedback */
+.fc-event-dragging {
+  opacity: 0.75;
+  cursor: move;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.fc-event-resizing {
+  opacity: 0.75;
+}
+
+/* Loading Spinner Animation */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Responsive Calendar */
+@media (max-width: 768px) {
+  .calendar-control-group {
+    padding: 12px;
+  }
+  
+  .calendar-filter-chip span {
+    padding: 4px 8px;
+    font-size: 0.8rem;
+  }
+  
+  .calendar-stat-badge {
+    padding: 6px 10px;
+  }
+  
+  .stat-label {
+    font-size: 0.75rem;
+  }
+  
+  .stat-value {
+    font-size: 1rem;
+  }
+  
+  #calendar {
+    height: 500px !important;
+  }
+  
+  .fc .fc-toolbar {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .fc .fc-toolbar-title {
+    font-size: 1.2rem;
+  }
+}
+
+/* Calendar Animation on Load */
+#calendar-container {
+  animation: fadeInCalendar 0.5s ease-out;
+}
+
+@keyframes fadeInCalendar {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================
+   EVENTS STYLES
+   ============================================
+   Comprehensive styling for the Events management feature
+   
+   Structure:
+   1. Event Form Styles - Form layout and input styling
+   2. Event Card Styles - Display cards for events list
+   3. Action Button Styles - Edit/Delete buttons
+   4. Responsive Design - Mobile adaptations
+   5. Animations - Transitions and loading states
+   ============================================ */
+
+/* ========================================
+   EVENT FORM STYLES
+   ======================================== */
+
+/* Event Form Container
+   - Removes default padding (card-body provides padding)
+   - Allows form to span full width of card */
+.event-form {
+  padding: 0;
+}
+
+/* Form Grid Layout
+   - CSS Grid for responsive multi-column layout
+   - auto-fit: Automatically determines number of columns based on space
+   - minmax(280px, 1fr): Each column minimum 280px, maximum equal fraction
+   - Result: Desktop shows 2-3 columns, mobile shows 1 column
+   - 20px gap between form fields for breathing room */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+/* Form Group Container
+   - Wraps label + input as vertical stack
+   - Flexbox column layout ensures label above input
+   - Each form group is one grid cell */
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Full Width Form Group
+   - Special class for fields that should span all columns
+   - Used for team members field (needs more space)
+   - grid-column: 1 / -1 means "start column 1, end at last column" */
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+/* Form Labels
+   - Smaller font size (0.875rem = 14px) for secondary text hierarchy
+   - Semi-bold (600) to distinguish from input text
+   - Dark gray color for good contrast
+   - 8px margin below to separate from input
+   - Flexbox for potential icon additions */
+.form-group label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;  /* Tailwind gray-700 */
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Form Input Fields
+   - 10px vertical, 14px horizontal padding for comfortable touch targets
+   - 2px border for visual weight (stands out without being heavy)
+   - 8px border-radius for modern rounded look (matches app theme)
+   - transition: all 0.2s - smooth animation for focus state
+   - White background (not transparent) ensures visibility */
+.form-group input {
+  padding: 10px 14px;
+  border: 2px solid #e5e7eb;  /* Tailwind gray-200 */
+  border-radius: 8px;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+  background: white;
+  color: #1f2937;  /* Tailwind gray-800 */
+}
+
+/* Input Focus State
+   - Remove default browser outline
+   - Blue border (#667eea) matches app primary color
+   - box-shadow creates subtle "glow" effect around input
+   - rgba(102, 126, 234, 0.1) is 10% opacity primary color
+   - Visual feedback confirms user is in this field */
+.form-group input:focus {
+  outline: none;
+  border-color: #667eea;  /* Primary brand color */
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* Placeholder Text Styling
+   - Lighter gray to distinguish from actual input
+   - Indicates field is empty and what to enter */
+.form-group input::placeholder {
+  color: #9ca3af;  /* Tailwind gray-400 */
+}
+
+/* Number Input Styling
+   - appearance: textfield removes default up/down arrows
+   - Cleaner look, especially on desktop browsers
+   - Users can still type numbers */
+.form-group input[type="number"] {
+  appearance: textfield;
+}
+
+/* Number Input Arrow Buttons (WebKit browsers)
+   - Explicitly hide spinner controls on Chrome, Safari, Edge
+   - -webkit-appearance: none removes the controls
+   - margin: 0 ensures no leftover space */
+.form-group input[type="number"]::-webkit-inner-spin-button,
+.form-group input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Date Input Cursor
+   - cursor: pointer indicates clickable/interactive element
+   - Signals to user they can click to open date picker */
+.form-group input[type="date"] {
+  cursor: pointer;
+}
+
+/* Form Actions Container
+   - Horizontal layout for Submit and Cancel buttons
+   - 12px gap between buttons
+   - 8px top padding to separate from form fields */
+.form-actions {
+  display: flex;
+  gap: 12px;
+  padding-top: 8px;
+}
+
+/* Form Action Buttons
+   - Consistent padding for both buttons
+   - Semi-bold text for emphasis
+   - Flexbox centers icon and text
+   - Smooth transition for hover effects */
+.form-actions .btn {
+  padding: 12px 24px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+/* ========================================
+   EVENT CARDS STYLES
+   ========================================
+   Cards that display individual events in the list
+   Each card shows event details with edit/delete actions
+   ======================================== */
+
+/* Event Card Container
+   - White background for contrast against page background
+   - 2px border creates defined boundary
+   - 12px border-radius for rounded corners (more than inputs for hierarchy)
+   - 16px bottom margin for spacing between cards
+   - transition: all 0.3s ease - smooth animations on hover
+   - overflow: hidden ensures content doesn't spill outside rounded corners */
+.event-card {
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+/* Event Card Hover State
+   - Border changes to primary color for interactivity feedback
+   - box-shadow creates elevation effect (card appears to lift)
+   - translateY(-2px) moves card up slightly (enhances lift effect)
+   - All three properties combined create smooth hover animation */
+.event-card:hover {
+  border-color: #667eea;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+  transform: translateY(-2px);
+}
+
+/* Event Card Header
+   - Flexbox horizontal layout for icon, title, and action buttons
+   - align-items: flex-start keeps items aligned to top (not centered)
+   - 16px gap provides spacing between elements
+   - 20px padding creates breathing room
+   - Gradient background (light gray) distinguishes header from body
+   - Border-bottom separates header from body content */
+.event-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 20px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-bottom: 2px solid #e5e7eb;
+}
+
+/* Event Icon (Emoji)
+   - 2rem (32px) makes icon prominent
+   - line-height: 1 removes extra space around emoji
+   - flex-shrink: 0 prevents icon from being compressed if space is tight */
+.event-icon {
+  font-size: 2rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+/* Event Title Section Container
+   - flex: 1 makes this section grow to fill available space
+   - min-width: 0 allows text to truncate if too long (fixes flexbox text overflow bug) */
+.event-title-section {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Event Title Text
+   - 1.25rem (20px) for prominence without overwhelming
+   - Bold (700) for hierarchy
+   - Very dark color (#0f172a) for maximum readability
+   - 0 horizontal margins, 8px bottom margin for spacing to date
+   - line-height: 1.4 provides comfortable reading */
+.event-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 8px 0;
+  line-height: 1.4;
+}
+
+/* Event Date Display
+   - Flexbox to align icon and text horizontally
+   - 6px gap between icon and date text
+   - Smaller font (0.875rem = 14px) as secondary information
+   - Primary color (#667eea) to stand out and indicate importance
+   - Semi-bold (600) for readability */
+.event-date {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.875rem;
+  color: #667eea;
+  font-weight: 600;
+}
+
+/* Event Date Icon
+   - flex-shrink: 0 prevents SVG icon from being compressed */
+.event-date svg {
+  flex-shrink: 0;
+}
+
+/* Event Actions Container
+   - Holds edit and delete buttons
+   - Flexbox horizontal layout
+   - 8px gap between buttons
+   - flex-shrink: 0 ensures buttons don't get compressed */
+.event-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Icon Buttons (Edit & Delete)
+   - White background to stand out from header gradient
+   - 2px border for definition
+   - 8px border-radius for consistency with app theme
+   - 8px padding creates clickable area around icon
+   - cursor: pointer indicates interactivity
+   - transition: all 0.2s enables smooth hover effects
+   - Flexbox centers the SVG icon
+   - Gray color (#6b7280) for neutral appearance */
+.btn-icon {
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+}
+
+/* Icon Button Hover State
+   - Very light gray background for subtle feedback
+   - Border changes to primary color
+   - Slight scale increase (1.05 = 5% larger) for emphasis */
+.btn-icon:hover {
+  background: #f9fafb;
+  border-color: #667eea;
+  color: #667eea;
+  transform: scale(1.05);
+}
+
+/* Delete Button Danger Hover State
+   - Red border and text (#ef4444) indicate destructive action
+   - Light red background (#fef2f2) reinforces warning
+   - Overrides standard hover colors for delete button specifically */
+.btn-icon.btn-danger:hover {
+  border-color: #ef4444;
+  color: #ef4444;
+  background: #fef2f2;
+}
+
+/* Icon Button Active/Pressed State
+   - scale(0.95) makes button slightly smaller when clicked
+   - Provides tactile feedback that button was pressed
+   - Applies to both edit and delete buttons */
+.btn-icon:active {
+  transform: scale(0.95);
+}
+
+/* Event Card Body
+   - Contains the event details grid
+   - 20px padding matches header padding for visual consistency */
+.event-card-body {
+  padding: 20px;
+}
+
+/* Event Details Grid
+   - CSS Grid layout for responsive multi-column display
+   - auto-fit: Automatically determines columns based on available space
+   - minmax(200px, 1fr): Each column minimum 200px, maximum equal fraction
+   - Result: Desktop shows 2-3 columns, mobile shows 1 column
+   - 16px gap provides breathing room between details */
+.event-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+/* Single Event Detail Item
+   - Vertical stack layout (label above value)
+   - 4px gap between label and value
+   - Each detail is one grid cell */
+.event-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Full Width Event Detail
+   - Forces detail to span all grid columns
+   - Used for team members field (needs more space for comma-separated list)
+   - grid-column: 1 / -1 means "start at first column, end at last column" */
+.event-detail.full-width {
+  grid-column: 1 / -1;
+}
+
+/* Detail Label Styling
+   - Small font (0.75rem = 12px) for secondary text hierarchy
+   - Semi-bold for distinction from value
+   - Medium gray color (#6b7280) indicates metadata
+   - UPPERCASE for visual distinction and modern look
+   - letter-spacing: 0.5px improves readability of uppercase text */
+.detail-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Detail Value Styling
+   - Slightly larger than label (0.9375rem = 15px) for hierarchy
+   - Dark gray (#1f2937) for primary content
+   - Medium weight (500) for readability */
+.detail-value {
+  font-size: 0.9375rem;
+  color: #1f2937;
+  font-weight: 500;
+}
+
+/* Team Members Value Special Styling
+   - Primary blue color (#667eea) makes it stand out
+   - Semi-bold (600) for emphasis
+   - Highlights this as interactive/important information */
+.detail-value.team-members {
+  color: #667eea;
+  font-weight: 600;
+}
+
+/* ========================================
+   HEADER ACTIONS CONTAINER
+   ========================================
+   Container for buttons in card headers (like Refresh button)
+   ======================================== */
+.header-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* ========================================
+   EMPTY STATE STYLING
+   ========================================
+   Shown when no events exist or are loading
+   ======================================== */
+
+/* Empty State Container
+   - Center-aligned text for symmetry
+   - 60px vertical, 20px horizontal padding for spacious feel
+   - Gray color indicates inactive/empty state */
+#events-list .empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #6b7280;
+}
+
+/* Empty State Main Text
+   - Larger font (1.125rem = 18px) for prominence
+   - Semi-bold (600) for emphasis
+   - Darker gray than container for hierarchy
+   - 8px bottom margin for spacing to helper text */
+#events-list .empty-state p {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+/* Empty State Helper Text
+   - Smaller font (0.875rem = 14px) for secondary information
+   - Light gray (#9ca3af) indicates helpful hint
+   - Guides user on what to do next */
+#events-list .empty-state small {
+  font-size: 0.875rem;
+  color: #9ca3af;
+}
+
+/* ========================================
+   RESPONSIVE DESIGN FOR EVENTS
+   ========================================
+   Mobile-first responsive adjustments
+   Breakpoint: 768px (tablets and smaller)
+   ======================================== */
+@media (max-width: 768px) {
+  
+  /* FORM GRID: Switch to single column
+     - On mobile, multi-column layout becomes too cramped
+     - Single column (1fr) ensures each field has full width
+     - Easier to tap and fill on mobile devices */
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  /* EVENT CARD HEADER: Stack vertically
+     - On mobile, horizontal layout wastes space
+     - flex-direction: column stacks icon, title, and buttons vertically
+     - More natural mobile reading flow */
+  .event-card-header {
+    flex-direction: column;
+  }
+  
+  /* EVENT ACTIONS: Full width with right alignment
+     - width: 100% makes button container span full width
+     - justify-content: flex-end aligns buttons to the right
+     - Provides better thumb accessibility on mobile */
+  .event-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  
+  /* EVENT DETAILS: Single column layout
+     - Two-column grid becomes too cramped on mobile
+     - Single column ensures readability
+     - Each detail gets full width for comfortable reading */
+  .event-details {
+    grid-template-columns: 1fr;
+  }
+  
+  /* FORM ACTIONS: Stack buttons vertically
+     - Side-by-side buttons are harder to tap on mobile
+     - Vertical stacking provides larger tap targets
+     - More comfortable mobile UX */
+  .form-actions {
+    flex-direction: column;
+  }
+  
+  /* FORM ACTION BUTTONS: Full width
+     - width: 100% makes each button span full width
+     - Creates larger, easier-to-tap targets
+     - Follows mobile UI best practices */
+  .form-actions .btn {
+    width: 100%;
+  }
+}
+
+/* ========================================
+   ANIMATIONS
+   ========================================
+   Smooth entrance animations for better UX
+   ======================================== */
+
+/* Event Card Entrance Animation
+   - animation: fadeInUp 0.4s ease-out
+   - Duration: 0.4s (fast enough to feel snappy, slow enough to see)
+   - Timing: ease-out (starts fast, slows down at end)
+   - Creates smooth, professional appearance when cards load */
+.event-card {
+  animation: fadeInUp 0.4s ease-out;
+}
+
+/* Fade In Up Keyframes
+   - Combines two effects: fade in (opacity) and slide up (transform)
+   - 
+   - FROM state (0%):
+   *   opacity: 0 - Card is invisible
+   *   translateY(20px) - Card is 20px below final position
+   *
+   - TO state (100%):
+   *   opacity: 1 - Card is fully visible
+   *   translateY(0) - Card is at final position
+   *
+   - Result: Cards elegantly slide up and fade in when loaded
+   - Provides visual feedback that content has loaded
+   - More engaging than instant appearance */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ========================================
+   END OF EVENTS STYLES
+   ======================================== */
+
+
+/* ============================================
+   IDEAS STYLES
+   ============================================ */

@@ -1,5 +1,5 @@
 import os
-import psycopg2
+import psycopg
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -18,7 +18,7 @@ TABLES_TO_DROP = [
 
 def get_db_connection():
     """Establish database connection"""
-    return psycopg2.connect(os.getenv("DATABASE_URL"))
+    return psycopg.connect(os.getenv("DATABASE_URL"))
 
 def verify_tables_exist(conn):
     """Check which tables actually exist"""

@@ -5,7 +5,7 @@ Werkzeug==2.3.7
 # Database Dependencies
 Flask-SQLAlchemy==3.0.5
 # Using psycopg2-binary for better Python 3.13 compatibility
-psycopg2-binary>=2.9.9
+psycopg[binary]>=3.2.0
 
 # Environment and Configuration
 python-dotenv==1.0.0
@@ -20,3 +20,6 @@ google-genai>=1.46.0
 # pytest==7.4.2
 # black==23.9.1
 # flake8==6.1.0
+
+# Production Server
+gunicorn>=20.1.0

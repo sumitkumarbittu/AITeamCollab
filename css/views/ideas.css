@@ -1,0 +1,611 @@
+/* Ideas Form */
+.idea-form {
+  padding: 0;
+}
+
+.idea-form textarea {
+  padding: 10px 14px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+  background: white;
+  color: #1f2937;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 100px;
+}
+
+.idea-form textarea:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.idea-form select {
+  padding: 10px 14px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+  background: white;
+  color: #1f2937;
+  cursor: pointer;
+}
+
+.idea-form select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* Priority Slider */
+.priority-slider {
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+  background: linear-gradient(to right, #10b981, #f59e0b, #ef4444);
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.priority-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: white;
+  border: 3px solid #667eea;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.priority-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: white;
+  border: 3px solid #667eea;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.priority-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+/* Attachment Inputs */
+.attachment-input-group {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+  align-items: center;
+}
+
+.idea-attachment-input {
+  flex: 1;
+  padding: 8px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.875rem;
+}
+
+.idea-caption-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.875rem;
+}
+
+.btn-small {
+  padding: 8px 16px;
+  font-size: 0.875rem;
+}
+
+/* Idea Cards */
+.idea-card {
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.idea-card:hover {
+  border-color: #667eea;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+  transform: translateY(-2px);
+}
+
+.idea-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 20px;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.idea-header-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  flex: 1;
+}
+
+.idea-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.idea-icon {
+  font-size: 2rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.idea-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 8px 0;
+  line-height: 1.4;
+}
+
+.idea-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.idea-author {
+  font-weight: 600;
+}
+
+.idea-date {
+  color: #9ca3af;
+}
+
+.idea-status {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.status-proposed {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.status-under-review {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-in-progress {
+  background: #ddd6fe;
+  color: #5b21b6;
+}
+
+.status-implemented {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.status-archived {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.idea-priority {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.priority-low {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.priority-medium {
+  background: #fed7aa;
+  color: #92400e;
+}
+
+.priority-high {
+  background: #fecaca;
+  color: #991b1b;
+}
+
+.idea-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.idea-card-body {
+  padding: 20px;
+}
+
+.idea-description {
+  color: #374151;
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+/* Attachments */
+.idea-attachments {
+  margin: 16px 0;
+  padding: 16px;
+  background: #f9fafb;
+  border-radius: 8px;
+}
+
+.attachments-preview {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.attachment-preview {
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  background: white;
+}
+
+.attachment-img {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.attachment-img:hover {
+  transform: scale(1.05);
+}
+
+.attachment-file {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  height: 120px;
+  color: #6b7280;
+}
+
+.attachment-file span {
+  margin-top: 8px;
+  font-size: 0.75rem;
+  text-align: center;
+  word-break: break-all;
+}
+
+.attachment-caption {
+  padding: 8px;
+  font-size: 0.75rem;
+  color: #6b7280;
+  border-top: 1px solid #e5e7eb;
+  margin: 0;
+}
+
+/* Interactions */
+.idea-interactions {
+  display: flex;
+  gap: 16px;
+  margin: 16px 0;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.idea-interaction-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  background: white;
+  color: #6b7280;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.idea-interaction-btn:hover {
+  border-color: #667eea;
+  color: #667eea;
+  background: #f0f4ff;
+}
+
+.idea-likes-list {
+  padding: 12px;
+  background: #f9fafb;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.idea-likes-list small {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+/* Comments */
+.idea-comments {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.comments-list {
+  margin-bottom: 16px;
+}
+
+.comment {
+  padding: 12px;
+  background: #f9fafb;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.comment strong {
+  color: #667eea;
+  font-size: 0.875rem;
+}
+
+.comment p {
+  margin: 4px 0;
+  color: #374151;
+  font-size: 0.875rem;
+}
+
+.comment small {
+  color: #9ca3af;
+  font-size: 0.75rem;
+}
+
+.no-comments {
+  text-align: center;
+  color: #9ca3af;
+  font-style: italic;
+  padding: 20px;
+}
+
+.add-comment-form {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.comment-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.875rem;
+}
+
+.comment-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* Responsive Design for Ideas */
+@media (max-width: 768px) {
+  .idea-card-header {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .idea-header-right {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+  
+  .idea-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  
+  .attachments-preview {
+    grid-template-columns: 1fr;
+  }
+  
+  .idea-interactions {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .idea-interaction-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .add-comment-form {
+    flex-direction: column;
+  }
+  
+  .attachment-input-group {
+    flex-direction: column;
+  }
+}
+
+/* Animation for Idea Cards */
+.idea-card {
+  animation: fadeInUp 0.4s ease-out;
+}
+
+/* ========================================
+   END OF IDEAS STYLES
+   ======================================== */
+
+/* ========================================
+   CREATE VIEW TABS STYLES
+   ======================================== */
+
+.create-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 16px 24px 0 24px;
+  border-bottom: 2px solid #e2e8f0;
+  background: #f8f9fa;
+  border-radius: 12px 12px 0 0;
+  flex-wrap: wrap;
+}
+
+.create-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: #6b7280;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 8px 8px 0 0;
+  position: relative;
+  top: 2px;
+}
+
+.create-tab:hover {
+  background: rgba(99, 102, 241, 0.1);
+  color: #6366f1;
+}
+
+.create-tab.active {
+  background: white;
+  color: #6366f1;
+  border-bottom-color: #6366f1;
+  font-weight: 600;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.create-tab svg {
+  width: 20px;
+  height: 20px;
+  stroke-width: 2.5;
+}
+
+.create-content {
+  display: none;
+  animation: fadeIn 0.3s ease;
+}
+
+.create-content.active {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive tabs */
+@media (max-width: 768px) {
+  .create-tabs {
+    padding: 12px 16px 0 16px;
+  }
+  
+  .create-tab {
+    padding: 10px 16px;
+    font-size: 0.9rem;
+    flex: 1;
+    justify-content: center;
+  }
+  
+  .create-tab svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+/* ========================================
+   END OF CREATE VIEW STYLES
+   ======================================== */
+
+/* ========================================
+   EVENT CARD DATE RANGE STYLES
+   ======================================== */
+.event-date {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #64748b;
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.event-date svg {
+  flex-shrink: 0;
+  color: #64748b;
+}
+
+.date-range {
+  display: inline-block;
+  line-height: 1.4;
+  color: #475569;
+  font-weight: 500;
+}
+
+/* All-day event indicator */
+.date-range:after {
+  content: "•";
+  margin: 0 6px;
+  color: #cbd5e1;
+  font-weight: normal;
+}
+
+/* Multi-line date range */
+.date-range br + span {
+  display: inline-block;
+  margin-top: 2px;
+  padding-left: 20px; /* Match icon width + gap */
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .event-date {
+    flex-wrap: wrap;
+  }
+  
+  .date-range {
+    display: block;
+    margin-top: 2px;
+  }
+  
+  .date-range:after {
+    display: none;
+  }
+}

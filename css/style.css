@@ -1,0 +1,15 @@
+/* Main Stylesheet */
+@import "base.css";
+@import "layout.css";
+@import "components/cards.css";
+@import "components/forms.css";
+@import "components/buttons.css";
+@import "components/items.css";
+@import "components/badges.css";
+@import "components/empty_state.css";
+@import "components/file_upload.css";
+@import "responsive.css";
+@import "widgets/activity.css";
+@import "widgets/chat.css";
+@import "widgets/graph.css";
+@import "views/ideas.css";
