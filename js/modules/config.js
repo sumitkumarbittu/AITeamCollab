@@ -54,7 +54,7 @@
 // API Base URL - Change this to your deployed backend URL
 // For local development, use 'http://localhost:5000'
 // For production (Render), use 'https://<your-app>.onrender.com'
-const API_BASE_URL = 'http://127.0.0.1:5001';
+const API_BASE_URL = 'https://aiteamcollab.onrender.com';
 
 // Check if we are in production (GitHub Pages)
 if (window.location.hostname.includes('github.io')) {
