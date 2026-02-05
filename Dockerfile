@@ -9,7 +9,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PORT=5000
 
 # Install system dependencies
-# gcc and libpq-dev are often needed for psycopg2 compilation
+# gcc and libpq-dev are needed for psycopg compilation
 # curl is useful for health checks
 RUN apt-get update && apt-get install -y \
     gcc \

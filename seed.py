@@ -64,7 +64,7 @@ def create_projects(cur):
             INSERT INTO projects (name, description, start_date, end_date, status)
             VALUES (%s, %s, %s, %s, 'active') RETURNING id;
         """, (name, f"Description for {name}", start_date.date(), end_date.date()))
-        projects.append(cur.fetchone()[0])
+        projects.append(cur.fetchone()['id'])
     return projects
 
 def create_tasks(cur, project_ids):
@@ -82,7 +82,7 @@ def create_tasks(cur, project_ids):
             INSERT INTO tasks (project_id, title, description, assigned_to, status, priority, due_date)
             VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id;
         """, (project_id, title, random.choice(DESCRIPTIONS), assigned, status, priority, due_date.date()))
-        tasks.append(cur.fetchone()[0])
+        tasks.append(cur.fetchone()['id'])
     
     # Create relationships (subtasks/dependencies)
     for task_id in tasks:

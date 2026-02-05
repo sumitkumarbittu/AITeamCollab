@@ -159,6 +159,14 @@ CORS(app)
 # In production, these files would typically be served by a web server like Nginx,
 # but for simplicity, Flask serves them directly here
 
+@app.route('/health')
+def health_check():
+    """
+    Health check endpoint for monitoring services like Render.
+    Returns 200 OK if the app is running.
+    """
+    return jsonify({"status": "healthy", "service": "AITeamCollab"}), 200
+
 @app.route('/')
 def serve_index():
     """
@@ -482,26 +490,24 @@ def init_db():
 # ============================================
 # Create tables defined using SQLAlchemy models (like Chat, ActivityLog)
 # This complements the raw SQL table creation above
-with app.app_context():
+def init_database():
+    """Initialize database tables - called on first request if needed"""
     try:
-        # Create all tables defined via SQLAlchemy models
-        db.create_all()
+        with app.app_context():
+            db.create_all()
+        init_db()
         print("✅ All database tables created successfully")
+        return True
     except Exception as e:
-        print(f"❌ Database table creation error: {e}")
+        print(f"❌ Database initialization error: {e}")
+        return False
 
-
-# ============================================
-# INITIALIZE DATABASE ON STARTUP
-# ============================================
-# Call init_db() when the application starts to ensure
-# all tables exist before handling any requests
+# Try to initialize on startup, but don't fail if it doesn't work
+# Database will be initialized on first request if this fails
 try:
-    init_db()
+    init_database()
 except Exception as e:
-    # If initialization fails, log the error but don't crash the app
-    # This allows the app to start even if the database is temporarily unavailable
-    print("❌ Database initialization error:", e)
+    print(f"⚠️ Database not ready on startup (will retry on first request): {e}")
 
 
 # ============================================
