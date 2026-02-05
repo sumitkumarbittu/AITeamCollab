@@ -130,12 +130,27 @@ app = Flask(__name__)
 # Configure SQLAlchemy ORM settings
 # SQLALCHEMY_DATABASE_URI: Connection string to PostgreSQL database
 # Retrieved from environment variable DATABASE_URL (set by Render or locally)
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
+database_url = os.getenv('DATABASE_URL')
+
+# Fix for SQLAlchemy to use psycopg (v3) instead of psycopg2
+# Render provides URLs starting with postgres://, but we need postgresql+psycopg://
+if database_url and database_url.startswith('postgres://'):
+    database_url = database_url.replace('postgres://', 'postgresql+psycopg://', 1)
+elif database_url and database_url.startswith('postgresql://'):
+    database_url = database_url.replace('postgresql://', 'postgresql+psycopg://', 1)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 
 # SQLALCHEMY_TRACK_MODIFICATIONS: Disable modification tracking feature
 # This feature adds overhead and is not needed in production
 # Setting to False improves performance
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Configure SQLAlchemy engine options for psycopg
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    'pool_pre_ping': True,  # Verify connections before using them
+    'pool_recycle': 300,    # Recycle connections after 5 minutes
+}
 
 # Initialize the SQLAlchemy database instance with our Flask app
 # This connects the db object from config.py to our Flask application
